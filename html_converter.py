@@ -5,27 +5,32 @@ def docx_to_html(path):
     doc = Document(path)
 
     html = []
-    html.append("<html><body style='font-family:Arial;'>")
+    html.append("<html>")
+    html.append("<head><meta charset='utf-8'></head>")
+    html.append("<body style='font-family:Arial; padding:20px;'>")
 
     for para in doc.paragraphs:
-        text = escape(para.text.strip())
+        text = para.text.strip()
 
+        # Als paragraaf leeg is → overslaan
         if not text:
             continue
 
         style = para.style.name.lower()
 
-        # koppen detecteren
+        # KOPPEN
         if style.startswith("heading") or style.startswith("kop"):
             level = "1"
             for n in ["1", "2", "3"]:
                 if n in style:
                     level = n
-            html.append(f"<h{level}>{text}</h{level}>")
+            html.append(f"<h{level}>{escape(text)}</h{level}>")
 
+        # GEWONE ALINEA
         else:
-            html.append(f"<p>{text}</p>")
+            html.append(f"<p>{escape(text)}</p>")
 
     html.append("</body></html>")
     return "\n".join(html)
+
 
