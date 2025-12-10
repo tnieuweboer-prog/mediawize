@@ -38,12 +38,15 @@ def index():
     if request.method == "GET":
         return Response(render_page(), mimetype="text/html")
 
-    # POST: verwerk upload
-    # Debug: laat zien welke velden Flask ziet
+    # Debug: log wat Flask ziet
     field_names = list(request.files.keys())
+    content_type = request.content_type
 
     if "file" not in request.files:
-        error = f"Geen bestand geüpload. Ontvangen bestand-velden: {field_names}"
+        error = (
+            f"Geen bestand geüpload. Ontvangen bestand-velden: {field_names} "
+            f"(content_type={content_type})"
+        )
         return Response(render_page(error), mimetype="text/html")
 
     file = request.files["file"]
@@ -52,14 +55,13 @@ def index():
         error = "Geen geldig bestand gekozen."
         return Response(render_page(error), mimetype="text/html")
 
-    # Tijdelijk DOCX opslaan
+    # Tijdelijke DOCX opslaan
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         file.save(tmp.name)
         temp_path = tmp.name
 
     try:
         html_output = docx_to_html(temp_path)
-        # Geef direct de gegenereerde HTML terug
         return Response(html_output, mimetype="text/html")
     except Exception as e:
         error = f"Fout tijdens converteren: {e}"
