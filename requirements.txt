@@ -1,5 +1,6 @@
 flask
-python-docx
-beautifulsoup4
-lxml
 gunicorn
+python-docx
+lxml
+markupsafe
+Pillow
