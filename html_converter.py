@@ -1,20 +1,21 @@
 import os
-import base64
 from html import escape
 from typing import Optional, List, Dict
 from docx import Document
 
-# Pillow voor beeldmaten (optioneel)
+# Pillow voor beeldmaten (optioneel, maar handig)
 try:
     from PIL import Image
     PIL_OK = True
 except Exception:
     PIL_OK = False
 
-# Basispad voor statische afbeeldingen op de server
+# Map voor afbeeldingen op de server
 BASE_DIR = os.path.dirname(__file__)
 UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+import uuid
 
 
 def _image_size(img_bytes: bytes) -> Optional[tuple]:
@@ -35,8 +36,6 @@ def _save_image_locally(img_bytes: bytes) -> str:
     Sla de afbeelding op in static/uploads en geef de URL terug
     die in HTML gebruikt kan worden.
     """
-    import uuid
-
     filename = f"img_{uuid.uuid4().hex}.png"
     path = os.path.join(UPLOAD_DIR, filename)
 
@@ -98,7 +97,7 @@ def _is_heading(para) -> int:
 
 def docx_to_html(file_like) -> str:
     """
-    DOCX → HTML met 1 overkoepelende groene div.
+    DOCX → volledige HTML-pagina.
     - Koppen blijven koppen (h1/h2/h3)
     - Paragrafen worden <p>
     - Afbeeldingen worden op de server opgeslagen en via /static/... geladen
@@ -107,6 +106,7 @@ def docx_to_html(file_like) -> str:
     doc = Document(file_like)
 
     out = [
+        "<!DOCTYPE html>",
         "<html>",
         "<head>",
         "<meta charset='utf-8' />",
@@ -115,7 +115,7 @@ def docx_to_html(file_like) -> str:
         "body { margin: 0; padding: 0; }",
 
         ".green {",
-        "    background-image: url('YOUR_ASSET_URL_HERE');",  # pas hier je eigen achtergrond aan
+        "    background-image: url('YOUR_ASSET_URL_HERE');",  # pas hier evt. je eigen achtergrond aan
         "    background-size: cover;",
         "    background-repeat: no-repeat;",
         "    background-position: center;",
@@ -183,3 +183,4 @@ def docx_to_html(file_like) -> str:
     out.append("</html>")
 
     return "\n".join(out)
+
