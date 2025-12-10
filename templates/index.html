@@ -1,64 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mediawize DOCX → HTML Converter</title>
     <meta charset="utf-8">
+    <title>DOCX → HTML Converter</title>
+
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
+            font-family: Arial;
             padding: 20px;
         }
-        .error { color: red; }
-        iframe.preview-frame {
+
+        iframe {
             width: 100%;
-            height: 600px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
-        }
-        button {
-            padding: 8px 16px;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        input[type=file] {
-            margin-top: 10px;
+            height: 80vh;
+            border: 1px solid #ccc;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
-<h1>📘 DOCX → HTML Converter</h1>
-<p>Upload een DOCX-bestand en download het geconverteerde HTML-bestand.</p>
+<h2>Upload een Word-bestand</h2>
 
 <form method="POST" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".docx">
-    <br>
-    <button type="submit">Converteren</button>
+    <input type="file" name="file" accept=".docx" required>
+    <button type="submit">Converteer</button>
 </form>
 
 {% if error %}
-    <p class="error">{{ error }}</p>
+    <p style="color:red;">{{ error }}</p>
 {% endif %}
 
 {% if filename %}
-    <h2>🔍 HTML Preview</h2>
-    <iframe class="preview-frame"
-            src="/preview/{{ filename }}">
-    </iframe>
+    <h3>Voorbeeld:</h3>
+    <iframe src="/preview/{{ filename }}"></iframe>
 
-    <br><br>
-    <a href="/download/{{ filename }}">📥 Download HTML-bestand</a>
+    <p>
+        <a href="/download/{{ filename }}">Download HTML-bestand</a>
+    </p>
 {% endif %}
 
 </body>
 </html>
-
-
-</body>
-</html>
-
 
 
