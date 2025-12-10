@@ -1,83 +1,63 @@
-from flask import Flask, render_template, request, send_file
-from markupsafe import Markup
+from flask import Flask, request, Response, render_template_string
 from html_converter import docx_to_html
-import os
 import tempfile
+import os
 
 app = Flask(__name__)
 
-TMP_DIR = "/tmp"  # hier slaan we de .html bestanden tijdelijk op
+UPLOAD_FORM = """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Mediawize DOCX → HTML Converter (TEST)</title>
+</head>
+<body>
+<h1>DOCX → HTML Converter (TEST)</h1>
+<p>Upload een DOCX-bestand. Na upload krijg je direct de HTML-pagina te zien.</p>
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".docx">
+    <button type="submit">Converteren</button>
+</form>
+</body>
+</html>
+"""
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    filename = None  # naam van het .html-bestand in /tmp
+    if request.method == "GET":
+        # Alleen een klein uploadformulier tonen
+        return render_template_string(UPLOAD_FORM)
 
-    if request.method == "POST":
-        if "file" not in request.files:
-            return render_template("index.html", error="Geen bestand geüpload")
+    # POST: bestand ontvangen en direct omzetten naar HTML
+    if "file" not in request.files:
+        return "Geen bestand geüpload", 400
 
-        file = request.files["file"]
+    file = request.files["file"]
+    if file.filename == "":
+        return "Geen geldig bestand gekozen", 400
 
-        if file.filename == "":
-            return render_template("index.html", error="Geen geldig bestand gekozen")
+    # Tijdelijk opslaan zodat python-docx ermee kan werken
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as temp_docx:
+        file.save(temp_docx.name)
+        temp_path = temp_docx.name
 
-        # Tijdelijke opslag van de DOCX
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as temp_docx:
-            file.save(temp_docx.name)
-            temp_path = temp_docx.name
+    try:
+        # Hier doen we precies wat Streamlit ook deed: DOCX → HTML-string
+        html_content = docx_to_html(temp_path)
+    except Exception as e:
+        return f"Fout bij converteren: {e}", 500
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
-        try:
-            # DOCX → HTML
-            html_content = docx_to_html(temp_path)
-
-            # HTML-bestand opslaan in /tmp
-            base_name = os.path.basename(temp_path)
-            out_path = os.path.join(TMP_DIR, base_name + ".html")
-            with open(out_path, "w", encoding="utf-8") as f:
-                f.write(html_content)
-
-            filename = os.path.basename(out_path)
-
-        except Exception as e:
-            return render_template("index.html", error=str(e))
-
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-
-        # Geef alleen de bestandsnaam door; preview en download gebruiken de routes hieronder
-        return render_template("index.html", filename=filename)
-
-    return render_template("index.html")
-
-
-@app.route("/preview/<filename>")
-def preview_file(filename):
-    """
-    Toon de HTML in de browser (zoals Streamlit dat deed).
-    Dit is puur view, geen download.
-    """
-    path = os.path.join(TMP_DIR, filename)
-    # as_attachment=False → browser rendert het als HTML-pagina
-    return send_file(path, mimetype="text/html", as_attachment=False)
-
-
-@app.route("/download/<filename>")
-def download_file(filename):
-    """
-    Deze route is echt voor downloaden van het HTML-bestand.
-    """
-    path = os.path.join(TMP_DIR, filename)
-    return send_file(path, mimetype="text/html", as_attachment=True)
+    # ⬇️ Belangrijk: we geven direct de HTML terug aan de browser
+    return Response(html_content, mimetype="text/html")
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8501, debug=True)
 
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8501, debug=True)
 
 
