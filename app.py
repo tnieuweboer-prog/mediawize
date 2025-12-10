@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, send_file, Markup
+from flask import Flask, render_template, request, send_file
+from markupsafe import Markup
 from html_converter import docx_to_html
 import os
 import tempfile
@@ -28,8 +29,8 @@ def index():
             # Converteren
             html_content = docx_to_html(temp_path)
 
-            # Opslaan in tijdelijke map voor download
-            out_path = temp_path.replace(".docx", ".html")
+            # Opslaan voor download
+            out_path = os.path.join("/tmp", os.path.basename(temp_path) + ".html")
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
 
@@ -50,10 +51,10 @@ def index():
 
 @app.route("/download/<filename>")
 def download_file(filename):
-    temp_dir = "/tmp"
-    path = os.path.join(temp_dir, filename)
+    path = os.path.join("/tmp", filename)
     return send_file(path, as_attachment=True)
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8501, debug=True)
+
