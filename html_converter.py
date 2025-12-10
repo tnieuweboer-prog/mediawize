@@ -11,8 +11,11 @@ try:
 except Exception:
     PIL_OK = False
 
+# Basispad voor statische afbeeldingen op de server
+BASE_DIR = os.path.dirname(__file__)
+UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# ---------- Hulpfuncties ----------
 
 def _image_size(img_bytes: bytes) -> Optional[tuple]:
     """Bepaal (breedte, hoogte) van afbeelding met Pillow."""
@@ -27,12 +30,27 @@ def _image_size(img_bytes: bytes) -> Optional[tuple]:
         return None
 
 
+def _save_image_locally(img_bytes: bytes) -> str:
+    """
+    Sla de afbeelding op in static/uploads en geef de URL terug
+    die in HTML gebruikt kan worden.
+    """
+    import uuid
+
+    filename = f"img_{uuid.uuid4().hex}.png"
+    path = os.path.join(UPLOAD_DIR, filename)
+
+    with open(path, "wb") as f:
+        f.write(img_bytes)
+
+    # URL zoals de browser hem ziet (Flask serveert /static)
+    return f"/static/uploads/{filename}"
+
+
 def _img_infos_for_paragraph(para, doc: Document) -> List[Dict]:
     """
     Zoek alle afbeeldingen in een paragraaf en retourneer info.
-
-    In plaats van upload naar Cloudinary wordt de afbeelding:
-    - als base64 data-URL in de HTML opgenomen.
+    Nu worden ze lokaal opgeslagen i.p.v. naar Cloudinary geüpload.
     """
     infos: List[Dict] = []
 
@@ -59,10 +77,7 @@ def _img_infos_for_paragraph(para, doc: Document) -> List[Dict]:
             h = size[1] if size else None
             small = (w and h and w < 100 and h < 100)
 
-            # Geen Cloudinary meer → direct base64 data-URL
-            b64 = base64.b64encode(blob).decode("ascii")
-            url = f"data:image/png;base64,{b64}"
-
+            url = _save_image_locally(blob)
             infos.append({"url": url, "w": w, "h": h, "small": small})
 
     return infos
@@ -81,14 +96,12 @@ def _is_heading(para) -> int:
     return 0
 
 
-# ---------- Hoofdconverter ----------
-
 def docx_to_html(file_like) -> str:
     """
     DOCX → HTML met 1 overkoepelende groene div.
     - Koppen blijven koppen (h1/h2/h3)
     - Paragrafen worden <p>
-    - Afbeeldingen worden als base64 data-URLs ingevoegd
+    - Afbeeldingen worden op de server opgeslagen en via /static/... geladen
     """
 
     doc = Document(file_like)
@@ -102,7 +115,7 @@ def docx_to_html(file_like) -> str:
         "body { margin: 0; padding: 0; }",
 
         ".green {",
-        "    background-image: url('YOUR_ASSET_URL_HERE');",  # pas hier desnoods een eigen achtergrond aan
+        "    background-image: url('YOUR_ASSET_URL_HERE');",  # pas hier je eigen achtergrond aan
         "    background-size: cover;",
         "    background-repeat: no-repeat;",
         "    background-position: center;",
@@ -126,7 +139,6 @@ def docx_to_html(file_like) -> str:
         "<div class='lesson light-green'>"
     ]
 
-    # Verwerking tekst + afbeeldingen
     for para in doc.paragraphs:
         text = (para.text or "").strip()
         level = _is_heading(para)
@@ -140,7 +152,7 @@ def docx_to_html(file_like) -> str:
         elif text:
             out.append(f"<p>{escape(text)}</p>")
 
-        # Afbeeldingen in deze paragraaf
+        # Afbeeldingen
         imgs = _img_infos_for_paragraph(para, doc)
         if not imgs:
             continue
@@ -148,7 +160,6 @@ def docx_to_html(file_like) -> str:
         small = [i for i in imgs if i["small"]]
         big = [i for i in imgs if not i["small"]]
 
-        # Kleine plaatjes in een rij
         if small:
             out.append(
                 '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0;">'
@@ -161,7 +172,6 @@ def docx_to_html(file_like) -> str:
                 )
             out.append("</div>")
 
-        # Grotere plaatjes apart
         for i in big:
             out.append(
                 f'<p><img src="{i["url"]}" alt="" '
@@ -173,3 +183,4 @@ def docx_to_html(file_like) -> str:
     out.append("</html>")
 
     return "\n".join(out)
+
