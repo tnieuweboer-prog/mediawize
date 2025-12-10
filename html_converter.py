@@ -183,4 +183,3 @@ def docx_to_html(file_like) -> str:
     out.append("</html>")
 
     return "\n".join(out)
-
