@@ -19,8 +19,9 @@ def docx_to_html(path):
         <div class="box">
             <h1>✔ HTML werkt!</h1>
             <p>Deze HTML komt NIET uit het Word-bestand maar direct uit html_converter.py.</p>
-            <p>Als je dit op app.mediawize.nl ziet, dan werkt de HTML-pipeline perfect.</p>
+            <p>Als je dit als mooie pagina ziet, dan werkt de HTML-keten.</p>
         </div>
     </body>
     </html>
     """
+
