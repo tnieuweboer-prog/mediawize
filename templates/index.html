@@ -45,8 +45,9 @@
 
 {% if filename %}
     <h2>🔍 HTML Preview</h2>
+    <!-- We tonen hier NIET de string, maar de echte HTML-pagina via /preview/... -->
     <iframe class="preview-frame"
-            src="/download/{{ filename }}">
+            src="/preview/{{ filename }}">
     </iframe>
 
     <br><br>
@@ -55,5 +56,6 @@
 
 </body>
 </html>
+
 
 
