@@ -1,113 +1,698 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from html_converter import docx_to_html
-from html import escape   # om de HTML veilig als tekst te tonen
+from workbook_builder import build_workbook_docx_front_and_steps
+from html import escape
 import tempfile
+import io
 import os
 
 app = Flask(__name__)
 
-PAGE_TEMPLATE = """
+# ---------- Gemeenschappelijke layout (CSS + header + tab-navigatie) ----------
+
+BASE_PAGE = """
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
     <meta charset="utf-8">
-    <title>DOCX → HTML converter (codeblok)</title>
+    <title>{page_title}</title>
     <style>
-        body {{
-            font-family: Arial, sans-serif;
-            padding: 2rem;
-            background: #f5f5f5;
+        :root {{
+            --bg: #f3f7fb;
+            --card-bg: #ffffff;
+            --accent: #0fa14b;
+            --accent-soft: #e5f7ee;
+            --accent-dark: #0b6f35;
+            --border-soft: #dde5f0;
+            --text-main: #1f2933;
+            --text-muted: #6b7280;
+            --danger: #e11d48;
         }}
-        h2 {{
-            margin-top: 0;
+        * {{
+            box-sizing: border-box;
+        }}
+        body {{
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #e0f7ff 0, #f3f7fb 45%, #eef7f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            color: var(--text-main);
+        }}
+        .app-shell {{
+            width: 100%;
+            max-width: 1040px;
+        }}
+        .app-header {{
+            margin-bottom: 0.75rem;
+        }}
+        .badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }}
+        .badge-dot {{
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--accent);
+        }}
+        .app-title {{
+            font-size: 1.6rem;
+            margin: 0.6rem 0 0.25rem 0;
+        }}
+        .app-subtitle {{
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }}
+        .tabs {{
+            margin-top: 0.9rem;
+            display: inline-flex;
+            background: rgba(255,255,255,0.9);
+            border-radius: 999px;
+            padding: 0.12rem;
+            box-shadow: 0 8px 20px rgba(15,24,41,0.12);
+        }}
+        .tab {{
+            border: none;
+            padding: 0.35rem 1.2rem;
+            font-size: 0.85rem;
+            border-radius: 999px;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }}
+        .tab-active {{
+            background: #0f172a;
+            color: #e5e7eb;
+        }}
+        .tab span.icon {{
+            font-size: 1rem;
+        }}
+        .card {{
+            margin-top: 1.1rem;
+            background: var(--card-bg);
+            border-radius: 18px;
+            box-shadow:
+                0 18px 45px rgba(15, 24, 41, 0.12),
+                0 0 0 1px rgba(209, 213, 219, 0.3);
+            padding: 1.5rem 1.75rem;
+        }}
+        .two-cols {{
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.35fr);
+            gap: 1.5rem;
+        }}
+        @media (max-width: 860px) {{
+            .two-cols {{
+                grid-template-columns: minmax(0, 1fr);
+            }}
+        }}
+        .col-left {{
+            border-right: 1px solid var(--border-soft);
+            padding-right: 1.25rem;
+        }}
+        @media (max-width: 860px) {{
+            .col-left {{
+                border-right: none;
+                border-bottom: 1px solid var(--border-soft);
+                padding-right: 0;
+                padding-bottom: 1.25rem;
+            }}
+        }}
+        .col-right {{
+            padding-left: 0.25rem;
+        }}
+        .section-title {{
+            font-size: 1.05rem;
+            margin: 0 0 0.4rem 0;
+        }}
+        .section-text {{
+            margin: 0 0 0.6rem 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
         }}
         .error {{
-            color: red;
-            font-weight: bold;
+            margin: 0.2rem 0 0.75rem 0;
+            font-size: 0.85rem;
+            color: var(--danger);
+            background: #fee2e2;
+            border-radius: 10px;
+            padding: 0.45rem 0.75rem;
         }}
+        form {{
+            margin-top: 0.5rem;
+        }}
+        label.small {{
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.1rem;
+        }}
+        input[type="text"],
         textarea {{
             width: 100%;
-            height: 400px;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            padding: 0.4rem 0.55rem;
+            font-size: 0.9rem;
+            font-family: inherit;
         }}
-        .section {{
-            background: #ffffff;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
-            box-shadow: 0 0 5px rgba(0,0,0,0.05);
+        textarea {{
+            resize: vertical;
+        }}
+        .row {{
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 0.55rem;
+        }}
+        .small-row {{
+            display: grid;
+            grid-template-columns: minmax(0,1.2fr) minmax(0,0.8fr);
+            gap: 0.55rem;
+        }}
+        .file-label {{
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #f3f4ff;
+            border-radius: 999px;
+            padding: 0.4rem 0.85rem;
+            border: 1px dashed #cbd5f5;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: #374151;
+            margin-top: 0.25rem;
+        }}
+        .file-label span.icon {{
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: #e0e7ff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }}
+        input[type="file"] {{
+            display: none;
+        }}
+        .file-name {{
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            min-height: 1rem;
+        }}
+        .actions {{
+            margin-top: 0.9rem;
+            display: flex;
+            gap: 0.5rem;
+        }}
+        .btn-primary {{
+            border: none;
+            outline: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--accent), #12b981);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.5rem 1.1rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+            transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, filter 0.08s ease-out;
+        }}
+        .btn-primary:hover {{
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+            box-shadow: 0 12px 26px rgba(16, 185, 129, 0.45);
+        }}
+        .btn-primary:active {{
+            transform: translateY(0);
+            box-shadow: 0 5px 12px rgba(16, 185, 129, 0.3);
+        }}
+        .btn-secondary {{
+            border: none;
+            outline: none;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.8rem;
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }}
+        .btn-secondary[disabled] {{
+            opacity: 0.6;
+            cursor: default;
+        }}
+        .result-header {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.4rem;
+        }}
+        .result-title {{
+            margin: 0;
+            font-size: 1rem;
+        }}
+        .result-subtitle {{
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }}
+        .code-area textarea {{
+            width: 100%;
+            height: 360px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem 0.85rem;
+            resize: vertical;
+            background: #0b1120;
+            color: #e5e7eb;
+        }}
+        .hint-list {{
+            margin: 0.75rem 0 0 0;
+            padding-left: 1.1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }}
+        .hint-list li {{
+            margin-bottom: 0.2rem;
+        }}
+        .footer-note {{
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
         }}
     </style>
 </head>
 <body>
-    <h2>DOCX → HTML converter (codeblok)</h2>
-    {error_block}
-    <div class="section">
-        <form method="POST" enctype="multipart/form-data">
-            <p>
-                <input type="file" name="file" accept=".docx" required>
-            </p>
-            <button type="submit">Converteer</button>
-        </form>
+<div class="app-shell">
+    <div class="app-header">
+        <div class="badge">
+            <span class="badge-dot"></span>
+            <span>Triade DOCX tools</span>
+        </div>
+        <h1 class="app-title">Lesmateriaal generator</h1>
+        <p class="app-subtitle">
+            Kies een tool: HTML-code voor Stermonitor / ELO of een compleet werkboekje in Word.
+        </p>
+        <div class="tabs">
+            <a href="/" class="tab {tab_html}">
+                <span class="icon">💚</span><span>DOCX → HTML</span>
+            </a>
+            <a href="/workbook" class="tab {tab_workbook}">
+                <span class="icon">📘</span><span>Werkboekjes-maker</span>
+            </a>
+        </div>
     </div>
-    {result_block}
+
+    <div class="card">
+        {card_content}
+    </div>
+</div>
+{extra_js}
 </body>
 </html>
 """
 
-def render_page(error: str | None = None, html_out: str | None = None) -> str:
+# ---------- DOCX → HTML pagina ----------
+
+def render_html_converter_page(error=None, html_out=None):
     if error:
-        error_block = f"<p class='error'>Fout: {error}</p>"
+        error_block = f"<p class='error'>Fout: {escape(error)}</p>"
     else:
         error_block = ""
 
     if html_out:
-        # Net als st.code(): HTML laten zien als tekst
-        escaped = escape(html_out)
-        result_block = f"""
-        <div class="section">
-            <h3>Gegenereerde HTML</h3>
-            <p>Kopieer de HTML hieronder en plak hem in Stermonitor / Elodigitaal.</p>
-            <textarea readonly>{escaped}</textarea>
-        </div>
-        """
+        escaped_html = escape(html_out)
+        result_block = (
+            f"<textarea id='html-output' readonly>{escaped_html}</textarea>"
+        )
+        copy_disabled = ""
     else:
-        result_block = ""
+        result_block = (
+            "<textarea id='html-output' readonly "
+            "placeholder=\"HTML verschijnt hier na het converteren.\"></textarea>"
+        )
+        copy_disabled = "disabled"
 
-    return PAGE_TEMPLATE.format(error_block=error_block, result_block=result_block)
+    card_content = f"""
+    <div class="two-cols">
+        <div class="col-left">
+            <h2 class="section-title">DOCX → HTML (Stermonitor / Elodigitaal)</h2>
+            <p class="section-text">
+                Upload een Word-bestand. De tekst en koppen worden omgezet naar eenvoudige HTML,
+                afbeeldingen worden inline als base64 opgenomen.
+            </p>
+            {error_block}
+            <form method="POST" enctype="multipart/form-data">
+                <label class="file-label">
+                    <span class="icon">📄</span>
+                    <span>Kies een Word-bestand (.docx)</span>
+                    <input type="file" name="file" accept=".docx" required>
+                </label>
+                <span class="file-name">Maximaal een paar MB, standaard .docx uit Word of LibreOffice.</span>
+                <div class="actions">
+                    <button type="submit" class="btn-primary">
+                        <span>Converteer naar HTML</span>
+                        <span>⚡</span>
+                    </button>
+                </div>
+            </form>
+            <ul class="hint-list">
+                <li>Gebruik waar mogelijk stijlen “Kop 1, Kop 2” in Word voor nette koppen in HTML.</li>
+                <li>Afbeeldingen komen inline, dus geen gedoe met aparte hosting.</li>
+            </ul>
+        </div>
+        <div class="col-right">
+            <div class="result-header">
+                <div>
+                    <h2 class="result-title">HTML-resultaat</h2>
+                    <p class="result-subtitle">Kopieer deze code en plak in Stermonitor, ELO of website.</p>
+                </div>
+                <button class="btn-secondary" id="copy-btn" {copy_disabled}>
+                    <span>📋</span><span>Kopieer HTML</span>
+                </button>
+            </div>
+            <div class="code-area">
+                {result_block}
+            </div>
+            <p class="footer-note">
+                Tip: sla je HTML lokaal op als .html-bestand voor later hergebruik.
+            </p>
+        </div>
+    </div>
+    """
+
+    extra_js = """
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const textarea = document.getElementById('html-output');
+        const copyBtn = document.getElementById('copy-btn');
+        if (!textarea || !copyBtn || copyBtn.hasAttribute('disabled')) return;
+        copyBtn.addEventListener('click', function () {
+            textarea.select();
+            textarea.setSelectionRange(0, 999999);
+            try {
+                const ok = document.execCommand('copy');
+                if (ok) {
+                    const old = copyBtn.innerHTML;
+                    copyBtn.innerHTML = "<span>✅</span><span>Gekopieerd!</span>";
+                    setTimeout(() => { copyBtn.innerHTML = old; }, 1500);
+                }
+            } catch (e) {
+                console.log("Kopiëren mislukt", e);
+            }
+        });
+    });
+    </script>
+    """
+    return BASE_PAGE.format(
+        page_title="DOCX → HTML converter",
+        tab_html="tab-active",
+        tab_workbook="",
+        card_content=card_content,
+        extra_js=extra_js,
+    )
 
 
 @app.route("/", methods=["GET", "POST"])
-def index():
+def html_index():
     if request.method == "GET":
-        return render_page()
+        return render_html_converter_page()
 
+    # POST: HTML converter
     if "file" not in request.files:
-        return render_page(f"Geen bestand geüpload. request.files = {list(request.files.keys())}")
+        return render_html_converter_page(
+            error=f"Geen bestand geüpload. request.files = {list(request.files.keys())}"
+        )
 
     file = request.files["file"]
-
     if file.filename == "":
-        return render_page("Geen geldig bestand gekozen.")
+        return render_html_converter_page(error="Geen geldig bestand gekozen.")
 
-    # Tijdelijk opslaan zoals in je werkende test
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         file.save(tmp.name)
         temp_path = tmp.name
 
     try:
         html_output = docx_to_html(temp_path)
-        # 👉 HTML als codeblok tonen, NIET renderen
-        return render_page(html_out=html_output)
+        return render_html_converter_page(html_out=html_output)
     except Exception as e:
-        return render_page(f"Fout tijdens converteren: {e}")
+        return render_html_converter_page(error=f"Fout tijdens converteren: {e}")
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
 
+# ---------- Werkboekjes pagina ----------
+
+def render_workbook_page(error=None):
+    if error:
+        error_block = f"<p class='error'>Fout: {escape(error)}</p>"
+    else:
+        error_block = ""
+
+    card_content = f"""
+    <div class="two-cols">
+        <div class="col-left">
+            <h2 class="section-title">Werkboekjes-maker (Word)</h2>
+            <p class="section-text">
+                Maak in één keer een Word-werkboekje met voorpagina, eventueel een materiaalstaat
+                en één of meerdere stappen / pagina's.
+            </p>
+            {error_block}
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row">
+                    <div>
+                        <label class="small">Opdracht titel</label>
+                        <input type="text" name="opdracht_titel" placeholder="Bijv. Recyclelamp ontwerpen">
+                    </div>
+                    <div>
+                        <label class="small">Vak</label>
+                        <input type="text" name="vak" value="BWI">
+                    </div>
+                </div>
+                <div class="row" style="margin-top:0.45rem;">
+                    <div>
+                        <label class="small">Keuze/profieldeel</label>
+                        <input type="text" name="profieldeel" placeholder="Bijv. Profieldeel BWI">
+                    </div>
+                    <div>
+                        <label class="small">Docent</label>
+                        <input type="text" name="docent" placeholder="Naam docent">
+                    </div>
+                </div>
+                <div style="margin-top:0.45rem;">
+                    <label class="small">Duur van de opdracht</label>
+                    <input type="text" name="duur" value="11 x 45 minuten">
+                </div>
+
+                <div style="margin-top:0.7rem;">
+                    <label class="small">Logo (optioneel, klein PNG/JPG)</label>
+                    <label class="file-label">
+                        <span class="icon">🏫</span><span>Upload logo</span>
+                        <input type="file" name="logo" accept=".png,.jpg,.jpeg">
+                    </label>
+                </div>
+
+                <div style="margin-top:0.5rem;">
+                    <label class="small">Omslagfoto (optioneel)</label>
+                    <label class="file-label">
+                        <span class="icon">🖼️</span><span>Upload omslagfoto</span>
+                        <input type="file" name="cover" accept=".png,.jpg,.jpeg">
+                    </label>
+                </div>
+
+                <div style="margin-top:0.9rem;">
+                    <label class="small">
+                        Materiaalstaat (optioneel) – één regel per materiaal, gescheiden door ;
+                        <br>Formaat: Nummer;Aantal;Benaming;Lengte;Breedte;Dikte;Materiaal
+                    </label>
+                    <textarea name="materialen" rows="4"
+                        placeholder="1;2;Plaat MDF;400;300;12;MDF&#10;2;4;Lat vuren;500;45;18;Vuren"></textarea>
+                </div>
+
+                <div style="margin-top:0.9rem;">
+                    <label class="small">Pagina's / stappen (max. 3)</label>
+                    <div style="margin-top:0.35rem;">
+                        <label class="small">Stap 1 titel</label>
+                        <input type="text" name="step1_title" placeholder="Bijv. Oriëntatie & eisen">
+                        <label class="small" style="margin-top:0.25rem;">Stap 1 tekst</label>
+                        <textarea name="step1_text" rows="3"
+                            placeholder="Korte beschrijving van wat leerlingen in deze stap doen."></textarea>
+                    </div>
+                    <div style="margin-top:0.45rem;">
+                        <label class="small">Stap 2 titel</label>
+                        <input type="text" name="step2_title" placeholder="Bijv. Ontwerp & schetsen">
+                        <label class="small" style="margin-top:0.25rem;">Stap 2 tekst</label>
+                        <textarea name="step2_text" rows="3"
+                            placeholder="Bijvoorbeeld: maak drie schetsen en kies de beste."></textarea>
+                    </div>
+                    <div style="margin-top:0.45rem;">
+                        <label class="small">Stap 3 titel</label>
+                        <input type="text" name="step3_title" placeholder="Bijv. Maken & reflectie">
+                        <label class="small" style="margin-top:0.25rem;">Stap 3 tekst</label>
+                        <textarea name="step3_text" rows="3"
+                            placeholder="Bijvoorbeeld: maak het product en beantwoord reflectievragen."></textarea>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn-primary">
+                        <span>Maak werkboekje (Word)</span>
+                        <span>📘</span>
+                    </button>
+                </div>
+            </form>
+
+            <ul class="hint-list">
+                <li>Het resultaat is een .docx-bestand dat je direct kunt delen of aanpassen.</li>
+                <li>Materiaalstaat en stappen zijn optioneel; laat velden leeg als je ze niet nodig hebt.</li>
+            </ul>
+        </div>
+        <div class="col-right">
+            <h2 class="section-title">Hoe werkt deze tool?</h2>
+            <p class="section-text">
+                Deze tool bouwt een werkboekje op volgens een vaste structuur:
+            </p>
+            <ul class="hint-list">
+                <li>Voorpagina met opdrachtnaam, vak, docent en duur.</li>
+                <li>Optioneel een materiaalstaat in tabelvorm.</li>
+                <li>Voor elke ingevulde stap een eigen pagina met titel en tekst.</li>
+            </ul>
+            <p class="section-text" style="margin-top:0.7rem;">
+                Na het klikken op <strong>Maak werkboekje</strong> krijg je direct een download van een Word-bestand.
+                Dit kun je openen in Word, opslaan op de server of printen voor leerlingen.
+            </p>
+            <p class="footer-note">
+                Tip: gebruik dit als basis en breid het werkboekje in Word verder uit met extra afbeeldingen of opdrachten.
+            </p>
+        </div>
+    </div>
+    """
+
+    return BASE_PAGE.format(
+        page_title="Werkboekjes-maker",
+        tab_html="",
+        tab_workbook="tab-active",
+        card_content=card_content,
+        extra_js="",
+    )
+
+
+@app.route("/workbook", methods=["GET", "POST"])
+def workbook_index():
+    if request.method == "GET":
+        return render_workbook_page()
+
+    form = request.form
+
+    meta = {
+        "opdracht_titel": form.get("opdracht_titel", "").strip(),
+        "vak": form.get("vak", "").strip() or "BWI",
+        "profieldeel": form.get("profieldeel", "").strip(),
+        "docent": form.get("docent", "").strip(),
+        "duur": form.get("duur", "").strip() or "11 x 45 minuten",
+        "include_materiaalstaat": False,
+        "materialen": [],
+    }
+
+    # Materiaalstaat parsen
+    materialen_raw = form.get("materialen", "").strip()
+    if materialen_raw:
+        meta["include_materiaalstaat"] = True
+        materialen = []
+        for line in materialen_raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parts = [p.strip() for p in line.split(";")]
+            cols = ["Nummer", "Aantal", "Benaming", "Lengte", "Breedte", "Dikte", "Materiaal"]
+            item = {}
+            for i, col in enumerate(cols):
+                item[col] = parts[i] if i < len(parts) else ""
+            materialen.append(item)
+        meta["materialen"] = materialen
+
+    # Logo & cover
+    logo_file = request.files.get("logo")
+    if logo_file and logo_file.filename:
+        meta["logo"] = logo_file.read()
+    else:
+        meta["logo"] = None
+
+    cover_file = request.files.get("cover")
+    if cover_file and cover_file.filename:
+        meta["cover_bytes"] = cover_file.read()
+    else:
+        meta["cover_bytes"] = None
+
+    # Stappen / pagina's
+    steps = []
+    for i in (1, 2, 3):
+        title = form.get(f"step{i}_title", "").strip()
+        text = form.get(f"step{i}_text", "").strip()
+        if not title and not text:
+            continue
+        if not title:
+            title = f"Pagina {i}"
+        step = {
+            "title": title,
+            "text_blocks": [text] if text else [],
+            "images": [],  # uitbreidbaar in de toekomst
+        }
+        steps.append(step)
+
+    if not steps:
+        # Minimaal één pagina
+        steps.append({
+            "title": meta["opdracht_titel"] or "Opdracht",
+            "text_blocks": [],
+            "images": [],
+        })
+
+    try:
+        docx_bytes = build_workbook_docx_front_and_steps(meta, steps)
+    except Exception as e:
+        return render_workbook_page(error=f"Fout tijdens bouwen van werkboekje: {e}")
+
+    # Word-bestand teruggeven als download
+    return send_file(
+        docx_bytes,
+        as_attachment=True,
+        download_name="werkboekje.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8501, debug=True)
-
