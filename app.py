@@ -54,22 +54,21 @@ body {{
   padding:18px;
 }}
 
-.logo {{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:24px;
+.logo img {{
+  width:52px;
+  height:52px;
+  border-radius:10px;
 }}
 
-.logo img {{
-  width:40px;
-  height:40px;
-  border-radius:8px;
+.logo-text {{
+  display:flex;
+  flex-direction:column;
 }}
 
 .logo-title {{
-  font-weight:700;
-  font-size:15px;
+  font-weight:800;
+  font-size:16px;
+  line-height:1.1;
 }}
 
 .nav a {{
