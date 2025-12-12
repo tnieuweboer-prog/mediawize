@@ -1,15 +1,16 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from html_converter import docx_to_html
 from workbook_builder import build_workbook_docx_front_and_steps
 from html import escape
 import tempfile
 import os
+import io
 
 app = Flask(__name__)
 
-# -----------------------------
-# DASHBOARD BASE TEMPLATE
-# -----------------------------
+# -------------------------------------------------
+# BASE DASHBOARD TEMPLATE
+# -------------------------------------------------
 BASE_PAGE = """
 <!DOCTYPE html>
 <html lang="nl">
@@ -44,7 +45,6 @@ body {{
   min-height:100vh;
 }}
 
-/* ---------- SIDEBAR ---------- */
 .sidebar {{
   width:260px;
   background:var(--sidebar);
@@ -54,27 +54,32 @@ body {{
   padding:18px;
 }}
 
+.logo {{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:24px;
+}}
+
 .logo img {{
   width:52px;
   height:52px;
   border-radius:10px;
 }}
 
-.logo-text {{
-  display:flex;
-  flex-direction:column;
-}}
-
 .logo-title {{
   font-weight:800;
   font-size:16px;
-  line-height:1.1;
+}}
+
+.logo-sub {{
+  font-size:11px;
+  color:#94a3b8;
 }}
 
 .nav a {{
   display:block;
   padding:12px 14px;
-  margin-top:6px;
   margin-bottom:6px;
   border-radius:10px;
   color:var(--sidebar-text);
@@ -98,7 +103,6 @@ body {{
   color:#94a3b8;
 }}
 
-/* ---------- CONTENT ---------- */
 .content {{
   flex:1;
   padding:24px;
@@ -139,28 +143,17 @@ input[type="text"], textarea {{
   margin-bottom:12px;
 }}
 
-.code-area textarea {{
-  width:100%;
-  height: calc(100vh - 360px); /* 👈 schaalt met scherm */
-  min-height:320px;
-  max-height:900px;
-  background:#0f172a;
-  color:#e5e7eb;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:14px;
-  padding:14px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size:12px;
-  line-height:1.45;
-  white-space:pre;
+textarea {{
+  min-height:160px;
+  font-family:monospace;
+  font-size:13px;
 }}
-
 
 button {{
   background:var(--accent);
   color:white;
   border:none;
-  padding:10px 16px;
+  padding:10px 18px;
   border-radius:999px;
   font-weight:700;
   cursor:pointer;
@@ -170,139 +163,67 @@ button:hover {{
   filter:brightness(1.05);
 }}
 
-.file {{
-  margin-bottom:14px;
-}}
-
-.download {{
-  margin-top:14px;
-}}
-.result-header {{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
+.row {{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
   gap:12px;
-  margin-bottom:10px;
-}}
-
-.result-header h2 {{
-  margin:0;
-  font-size:16px;
-}}
-
-.result-header .sub {{
-  margin:4px 0 0 0;
-  font-size:12px;
-  color:var(--muted);
-}}
-
-.btn-copy {{
-  background:#1e293b;
-  color:#e5e7eb;
-  border:none;
-  border-radius:999px;
-  padding:8px 14px;
-  font-weight:700;
-  cursor:pointer;
-}}
-
-.btn-copy:hover {{
-  background:#334155;
-}}
-
-
-/* ---------- MOBILE ---------- */
-.mobile-toggle {{
-  display:none;
 }}
 
 @media (max-width:900px) {{
   .sidebar {{
-    position:fixed;
-    left:-260px;
-    top:0;
-    height:100%;
-    transition:0.2s;
-    z-index:10;
+    display:none;
   }}
-  .sidebar.open {{
-    left:0;
-  }}
-  .mobile-toggle {{
-    display:block;
-    margin-bottom:16px;
+  .row {{
+    grid-template-columns:1fr;
   }}
 }}
 </style>
-
-<script>
-function toggleSidebar() {{
-  document.querySelector('.sidebar').classList.toggle('open');
-}}
-</script>
-
-<script>
-function copyHTML() {{
-  const el = document.getElementById("htmlResult");
-  el.select();
-  el.setSelectionRange(0, 999999);
-  document.execCommand("copy");
-}}
-</script>
-
 </head>
-<body>
 
+<body>
 <div class="app">
 
-  <aside class="sidebar">
-    <div class="logo">
-      <!-- Zet hier later je echte logo -->
-      <img src="/static/assets/logo.png" alt="Logo">
+<aside class="sidebar">
+  <div class="logo">
+    <img src="/static/assets/logo.png" alt="Logo">
+    <div>
       <div class="logo-title">Triade Tools</div>
+      <div class="logo-sub">DOCX & Werkboekjes</div>
     </div>
+  </div>
 
-    <nav class="nav">
-      <a href="/" class="{tab_html}">💚 DOCX → HTML</a>
-      <a href="/workbook" class="{tab_workbook}">📘 Werkboekjes</a>
-    </nav>
+  <nav class="nav">
+    <a href="/" class="{tab_html}">💚 DOCX → HTML</a>
+    <a href="/workbook" class="{tab_workbook}">📘 Werkboekjes</a>
+  </nav>
 
-    <div class="sidebar-footer">
-      SG De Triade · interne tool
-    </div>
-  </aside>
+  <div class="sidebar-footer">
+    SG De Triade · interne tool
+  </div>
+</aside>
 
-  <main class="content">
-    <button class="mobile-toggle" onclick="toggleSidebar()">☰ Menu</button>
-    {content}
-  </main>
+<main class="content">
+{content}
+</main>
 
 </div>
-
 </body>
 </html>
 """
 
-# -----------------------------
-# PAGES
-# -----------------------------
+# -------------------------------------------------
+# DOCX → HTML PAGE
+# -------------------------------------------------
 def html_page(error=None, result=None):
     error_block = f"<div class='error'>{error}</div>" if error else ""
     result_block = ""
+
     if result:
         result_block = f"""
-        <div class="result-header">
-          <div>
-            <h2>Gegenereerde HTML</h2>
-            <p class="sub">Klik om te kopiëren en plak in Stermonitor / ELO</p>
-          </div>
-          <button class="btn-copy" onclick="copyHTML()">📋 Kopiëren</button>
-        </div>
-
-<div class="code-area">
-  <textarea id="htmlResult" readonly>...</textarea>
-</div>
+        <h2>Gegenereerde HTML</h2>
+        <textarea readonly>{escape(result)}</textarea>
         """
+
     return BASE_PAGE.format(
         tab_html="active",
         tab_workbook="",
@@ -312,9 +233,7 @@ def html_page(error=None, result=None):
           <p class="lead">Zet Word-bestanden om naar HTML voor Stermonitor / ELO.</p>
           {error_block}
           <form method="POST" enctype="multipart/form-data">
-            <div class="file">
-              <input type="file" name="file" accept=".docx" required>
-            </div>
+            <input type="file" name="file" accept=".docx" required>
             <button type="submit">Converteren</button>
           </form>
           {result_block}
@@ -322,24 +241,52 @@ def html_page(error=None, result=None):
         """
     )
 
+# -------------------------------------------------
+# WERKBOEKJES PAGE (A + C)
+# -------------------------------------------------
 def workbook_page(error=None):
     error_block = f"<div class='error'>{error}</div>" if error else ""
+
     return BASE_PAGE.format(
         tab_html="",
         tab_workbook="active",
         content=f"""
         <div class="card">
           <h1>Werkboekjes-generator</h1>
-          <p class="lead">Maak automatisch Word-werkboekjes voor lessen.</p>
+          <p class="lead">
+            Maak snel een basis-werkboekje in Word.
+            Deze versie is bewust eenvoudig en vormt de basis voor uitbreiding.
+          </p>
+
           {error_block}
-          <p>(Formulier kun je hier stap voor stap verder uitbreiden.)</p>
+
+          <form method="POST">
+            <label>Opdracht titel</label>
+            <input type="text" name="titel" required>
+
+            <div class="row">
+              <div>
+                <label>Vak</label>
+                <input type="text" name="vak" value="BWI">
+              </div>
+              <div>
+                <label>Docent</label>
+                <input type="text" name="docent">
+              </div>
+            </div>
+
+            <label>Duur van de opdracht</label>
+            <input type="text" name="duur" value="10 x 45 minuten">
+
+            <button type="submit">📘 Werkboekje genereren</button>
+          </form>
         </div>
         """
     )
 
-# -----------------------------
+# -------------------------------------------------
 # ROUTES
-# -----------------------------
+# -------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
@@ -365,11 +312,35 @@ def index():
         if os.path.exists(path):
             os.remove(path)
 
-@app.route("/workbook", methods=["GET"])
+@app.route("/workbook", methods=["GET", "POST"])
 def workbook():
-    return workbook_page()
+    if request.method == "GET":
+        return workbook_page()
 
-# -----------------------------
+    try:
+        meta = {
+            "opdracht_titel": request.form.get("titel", ""),
+            "vak": request.form.get("vak", ""),
+            "docent": request.form.get("docent", ""),
+            "duur": request.form.get("duur", ""),
+            "include_materiaalstaat": False,
+        }
+
+        steps = []  # A-versie: nog geen stappen
+
+        output = build_workbook_docx_front_and_steps(meta, steps)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="werkboekje.docx",
+            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+
+    except Exception as e:
+        return workbook_page(f"Fout bij genereren: {e}")
+
+# -------------------------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8501, debug=True)
 
