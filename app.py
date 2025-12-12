@@ -143,11 +143,16 @@ input[type="text"], textarea {{
   margin-bottom:12px;
 }}
 
-textarea {{
-  min-height:160px;
-  font-family:monospace;
-  font-size:13px;
+.code-area textarea {{
+  height: calc(100vh - 320px);
+  min-height: 320px;
+  max-height: 900px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre;
 }}
+
 
 button {{
   background:var(--accent);
