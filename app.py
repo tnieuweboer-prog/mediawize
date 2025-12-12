@@ -309,7 +309,7 @@ def html_page(error: str | None = None, result: str | None = None):
         </div>
 
         <div class="code-area">
-          <textarea id="htmlResult" readonly>{escape(result)}</textarea>
+          <textarea id="htmlResult" readonly>{result}</textarea>
         </div>
         """
     else:
