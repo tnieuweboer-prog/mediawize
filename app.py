@@ -74,6 +74,7 @@ body {{
 .nav a {{
   display:block;
   padding:12px 14px;
+  margin-top:6px;
   margin-bottom:6px;
   border-radius:10px;
   color:var(--sidebar-text);
