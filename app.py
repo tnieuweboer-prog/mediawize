@@ -225,8 +225,10 @@ def html_page(error=None, result=None):
 
     if result:
         result_block = f"""
+        <div class="code-area">
         <h2>Gegenereerde HTML</h2>
         <textarea readonly>{escape(result)}</textarea>
+        </div>
         """
 
     return BASE_PAGE.format(
