@@ -241,12 +241,12 @@ function toggleSidebar() {{
 </script>
 
 <script>
-function copyHTML() {
+function copyHTML() {{
   const el = document.getElementById("htmlResult");
   el.select();
   el.setSelectionRange(0, 999999);
   document.execCommand("copy");
-}
+}}
 </script>
 
 </head>
