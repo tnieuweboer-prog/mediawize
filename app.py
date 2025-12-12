@@ -6,9 +6,6 @@ import os
 
 app = Flask(__name__)
 
-# -------------------------------------------------
-# BASE TEMPLATE
-# -------------------------------------------------
 BASE_PAGE = """
 <!DOCTYPE html>
 <html lang="nl">
@@ -119,7 +116,7 @@ label {{
   margin-top:12px;
 }}
 
-input[type="text"], textarea {{
+input[type="text"], textarea, select {{
   width:100%;
   padding:10px 12px;
   border-radius:12px;
@@ -175,7 +172,7 @@ button {{
 
 <aside class="sidebar">
   <div class="logo">
-    <img src="/static/assets/logo.png">
+    <img src="/static/assets/logo.png" alt="Logo">
     <div>
       <div class="logo-title">Triade Tools</div>
       <div class="logo-sub">DOCX & Werkboekjes</div>
@@ -198,7 +195,6 @@ button {{
 async function copyHTML() {{
   const el = document.getElementById("htmlResult");
   if (!el) return;
-
   const text = el.value;
   try {{
     await navigator.clipboard.writeText(text);
@@ -213,9 +209,6 @@ async function copyHTML() {{
 </html>
 """
 
-# -------------------------------------------------
-# HTML PAGE
-# -------------------------------------------------
 def html_page(result=None, error=None):
     error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
 
@@ -247,26 +240,27 @@ def html_page(result=None, error=None):
 
     return BASE_PAGE.format(tab_html="active", tab_workbook="", content=content)
 
-# -------------------------------------------------
-# WORKBOOK PAGE
-# -------------------------------------------------
 def workbook_page(error=None):
     error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
 
     content = f"""
     <div class="card">
       <h1>Werkboekjes-generator</h1>
-      <p class="lead">Basisversie om snel een werkboekje te maken.</p>
+      <p class="lead">Kies een vak-template (BWI/PIE/MVI). Header/footer/achtergrond komen uit het Word-template. Inhoud bouwen we later verder uit.</p>
       {error_block}
       <form method="POST">
-        <label>Opdracht titel</label>
-        <input type="text" name="titel" required>
+        <label>Vak (template)</label>
+        <select name="vak" required>
+          <option value="BWI">BWI</option>
+          <option value="PIE">PIE</option>
+          <option value="MVI">MVI</option>
+        </select>
 
-        <label>Vak</label>
-        <input type="text" name="vak" value="BWI">
+        <label>Opdracht titel</label>
+        <input type="text" name="titel" required placeholder="Bijv. Recyclelamp ontwerpen">
 
         <label>Docent</label>
-        <input type="text" name="docent">
+        <input type="text" name="docent" placeholder="Naam docent">
 
         <label>Duur</label>
         <input type="text" name="duur" value="10 x 45 minuten">
@@ -278,9 +272,6 @@ def workbook_page(error=None):
 
     return BASE_PAGE.format(tab_html="", tab_workbook="active", content=content)
 
-# -------------------------------------------------
-# ROUTES
-# -------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
@@ -300,32 +291,38 @@ def index():
     try:
         html = docx_to_html(path)
         return html_page(result=html)
+    except Exception as e:
+        return html_page(error=f"Fout: {e}")
     finally:
-        os.remove(path)
+        if os.path.exists(path):
+            os.remove(path)
 
 @app.route("/workbook", methods=["GET", "POST"])
 def workbook():
     if request.method == "GET":
         return workbook_page()
 
-    meta = {
-        "opdracht_titel": request.form.get("titel",""),
-        "vak": request.form.get("vak",""),
-        "docent": request.form.get("docent",""),
-        "duur": request.form.get("duur",""),
-        "include_materiaalstaat": False,
-    }
+    try:
+        meta = {
+            "vak": request.form.get("vak", "BWI"),
+            "opdracht_titel": request.form.get("titel", ""),
+            "docent": request.form.get("docent", ""),
+            "duur": request.form.get("duur", ""),
+            "include_materiaalstaat": False,
+        }
 
-    output = build_workbook_docx_front_and_steps(meta, [])
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name="werkboekje.docx",
-        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    )
+        output = build_workbook_docx_front_and_steps(meta, [])
+        vak = (meta.get("vak") or "BWI").upper()
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=f"werkboekje_{vak}.docx",
+            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
 
-# -------------------------------------------------
+    except Exception as e:
+        return workbook_page(error=f"Fout bij genereren: {e}")
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8501, debug=True)
-
 
