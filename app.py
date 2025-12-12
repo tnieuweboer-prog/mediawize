@@ -139,11 +139,22 @@ input[type="text"], textarea {{
   margin-bottom:12px;
 }}
 
-textarea {{
-  min-height:160px;
-  font-family:monospace;
-  font-size:13px;
+.code-area textarea {{
+  width:100%;
+  height: calc(100vh - 360px); /* 👈 schaalt met scherm */
+  min-height:320px;
+  max-height:900px;
+  background:#0f172a;
+  color:#e5e7eb;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size:12px;
+  line-height:1.45;
+  white-space:pre;
 }}
+
 
 button {{
   background:var(--accent);
@@ -166,6 +177,39 @@ button:hover {{
 .download {{
   margin-top:14px;
 }}
+.result-header {{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:10px;
+}}
+
+.result-header h2 {{
+  margin:0;
+  font-size:16px;
+}}
+
+.result-header .sub {{
+  margin:4px 0 0 0;
+  font-size:12px;
+  color:var(--muted);
+}}
+
+.btn-copy {{
+  background:#1e293b;
+  color:#e5e7eb;
+  border:none;
+  border-radius:999px;
+  padding:8px 14px;
+  font-weight:700;
+  cursor:pointer;
+}}
+
+.btn-copy:hover {{
+  background:#334155;
+}}
+
 
 /* ---------- MOBILE ---------- */
 .mobile-toggle {{
@@ -195,6 +239,15 @@ button:hover {{
 function toggleSidebar() {{
   document.querySelector('.sidebar').classList.toggle('open');
 }}
+</script>
+
+<script>
+function copyHTML() {
+  const el = document.getElementById("htmlResult");
+  el.select();
+  el.setSelectionRange(0, 999999);
+  document.execCommand("copy");
+}
 </script>
 
 </head>
@@ -238,8 +291,17 @@ def html_page(error=None, result=None):
     result_block = ""
     if result:
         result_block = f"""
-        <h2>Gegenereerde HTML</h2>
-        <textarea readonly>{escape(result)}</textarea>
+        <div class="result-header">
+          <div>
+            <h2>Gegenereerde HTML</h2>
+            <p class="sub">Klik om te kopiëren en plak in Stermonitor / ELO</p>
+          </div>
+          <button class="btn-copy" onclick="copyHTML()">📋 Kopiëren</button>
+        </div>
+
+<div class="code-area">
+  <textarea id="htmlResult" readonly>...</textarea>
+</div>
         """
     return BASE_PAGE.format(
         tab_html="active",
