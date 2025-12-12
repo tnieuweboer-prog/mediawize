@@ -1,197 +1,126 @@
 import io
+import os
+from typing import Optional, Dict
 from docx import Document
-from docx.shared import Pt, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_ALIGN_VERTICAL
-from docx.oxml import parse_xml
-from docx.oxml.ns import nsdecls
 
 
-def _p(doc, text="", bold=False, size=12, align=None):
-    p = doc.add_paragraph()
-    run = p.add_run(text)
-    run.font.name = "Arial"
-    run.font.size = Pt(size)
-    run.bold = bold
-    if align:
-        p.alignment = align
-    return p
-
-
-def add_logo_to_header(section, logo_bytes: bytes):
-    """Logo is optioneel. Als het add_picture faalt, slaan we het over."""
-    header = section.header
-    paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-    paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = paragraph.add_run()
-    try:
-        run.add_picture(io.BytesIO(logo_bytes), width=Inches(1.0), height=Inches(1.0))
-    except Exception:
-        # logo is optioneel; nooit de hele build laten crashen
-        pass
-
-
-def _force_cell_vertical_center(cell):
-    tc_pr = cell._tc.get_or_add_tcPr()
-    tc_pr.append(parse_xml(r'<w:vAlign %s w:val="center"/>' % nsdecls("w")))
-    cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
-    for p in cell.paragraphs:
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-
-def add_materiaalstaat_page(doc: Document, materialen: list[dict]):
-    """Voegt materiaalstaat toe op eigen pagina."""
-    doc.add_page_break()
-
-    title_p = doc.add_paragraph()
-    run = title_p.add_run("Materiaalstaat")
-    run.font.bold = True
-    run.font.name = "Arial"
-    run.font.size = Pt(16)
-
-    _p(doc, "")
-
-    cols = ["Nummer", "Aantal", "Benaming", "Lengte", "Breedte", "Dikte", "Materiaal"]
-    table = doc.add_table(rows=1, cols=len(cols))
-    table.style = "Table Grid"
-
-    # header
-    hdr_cells = table.rows[0].cells
-    for i, col_name in enumerate(cols):
-        cell = hdr_cells[i]
-        cell.text = col_name
-        for p in cell.paragraphs:
-            for r in p.runs:
-                r.font.bold = True
-                r.font.name = "Arial"
-                r.font.size = Pt(12)
-
-        cell._element.get_or_add_tcPr().append(
-            parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls("w")))
-        )
-        _force_cell_vertical_center(cell)
-
-    # data
-    for item in materialen:
-        row_cells = table.add_row().cells
-        for j, key in enumerate(cols):
-            value = item.get(key, "")
-            cell = row_cells[j]
-            cell.text = value
-            for p in cell.paragraphs:
-                for r in p.runs:
-                    r.font.name = "Arial"
-                    r.font.size = Pt(12)
-            _force_cell_vertical_center(cell)
-
-        # rijhoogte vergroten
-        tr = row_cells[0]._tc.getparent()
-        trPr = tr.get_or_add_trPr()
-        trHeight = parse_xml(r'<w:trHeight {} w:val="600"/>'.format(nsdecls("w")))
-        trPr.append(trHeight)
-
-    _p(doc, "")
-    _p(doc, "")
-
-
-def add_cover_page(
-    doc: Document,
-    *,
-    opdracht_titel: str,
-    vak: str,
-    profieldeel: str,
-    docent: str,
-    duur: str,
-    logo: bytes = None,
-    cover_bytes: bytes = None,
-):
-    if logo:
-        add_logo_to_header(doc.sections[0], logo)
-
-    _p(doc, "Opdracht", bold=True, size=14)
-    _p(doc, opdracht_titel or " ", bold=True, size=28)
-    _p(doc, "")
-    _p(doc, vak or "", bold=True, size=14)
-
-    _p(doc, f"Keuze/profieldeel: {profieldeel}" if profieldeel else "Keuze/profieldeel:", size=12)
-    _p(doc, f"Docent: {docent}" if docent else "Docent:", size=12)
-    _p(doc, f"Duur van de opdracht: {duur}" if duur else "Duur van de opdracht:", size=12)
-
-    _p(doc, "")
-
-    # cover-afbeelding (optioneel en crash-proof)
-    if cover_bytes:
-        try:
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            r = p.add_run()
-            r.add_picture(io.BytesIO(cover_bytes), width=Inches(4.5))
-            _p(doc, "")
-        except Exception:
-            pass
-
-    # naam / klas
-    table = doc.add_table(rows=2, cols=2)
-    table.style = "Table Grid"
-    table.rows[0].cells[0].text = "Naam:"
-    table.rows[0].cells[1].text = ""
-    table.rows[1].cells[0].text = "Klas:"
-    table.rows[1].cells[1].text = ""
-
-    for row in table.rows:
-        for cell in row.cells:
-            for p in cell.paragraphs:
-                for r in p.runs:
-                    r.font.name = "Arial"
-                    r.font.size = Pt(12)
-
-    _p(doc, "")
-    _p(doc, "")
-
-
-def build_workbook_docx_front_and_steps(meta: dict, steps: list[dict]) -> io.BytesIO:
+def _replace_text_everywhere(doc: Document, replacements: Dict[str, str]) -> int:
     """
-    - Voorpagina
-    - (optioneel) Materiaalstaat
-    - Elke stap/pagina op EIGEN pagina
+    Vervang placeholders in:
+    - paragraphs
+    - tables (alle cellen)
+    Retourneert aantal vervangingen (ruwe telling per match).
     """
-    doc = Document()
+    replaced_count = 0
 
-    add_cover_page(
-        doc,
-        opdracht_titel=meta.get("opdracht_titel", ""),
-        vak=meta.get("vak", "BWI"),
-        profieldeel=meta.get("profieldeel", ""),
-        docent=meta.get("docent", ""),
-        duur=meta.get("duur", ""),
-        logo=meta.get("logo"),
-        cover_bytes=meta.get("cover_bytes"),
-    )
+    def replace_in_paragraph(paragraph):
+        nonlocal replaced_count
+        if not paragraph.runs:
+            return
 
-    if meta.get("include_materiaalstaat"):
-        add_materiaalstaat_page(doc, meta.get("materialen", []))
+        full_text = "".join(run.text for run in paragraph.runs)
+        new_text = full_text
 
-    # elke stap op eigen pagina
-    for step in steps:
-        doc.add_page_break()
+        for k, v in replacements.items():
+            if k in new_text:
+                new_text = new_text.replace(k, v)
+                replaced_count += 1
 
-        if step.get("title"):
-            doc.add_heading(step["title"], level=1)
+        if new_text != full_text:
+            # reset runs en zet alles in 1 run (simpele aanpak)
+            for run in paragraph.runs:
+                run.text = ""
+            paragraph.runs[0].text = new_text
 
-        for txt in step.get("text_blocks", []):
-            _p(doc, txt, size=11)
+    # gewone paragrafen
+    for p in doc.paragraphs:
+        replace_in_paragraph(p)
 
-        for img_bytes in step.get("images", []):
-            if img_bytes:
-                try:
-                    doc.add_picture(io.BytesIO(img_bytes), width=Inches(4.5))
-                    _p(doc, "")
-                except Exception:
-                    # ook afbeeldingen bij stappen mogen nooit crashen
-                    pass
+    # tabellen
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    replace_in_paragraph(p)
+
+    return replaced_count
+
+
+def _template_path_for_vak(vak: str, base_dir: Optional[str] = None) -> str:
+    """
+    Bepaalt welk templatebestand gebruikt wordt.
+    Verwacht templates in: <project>/templates_docx/<VAK>_template.docx
+    """
+    vak_norm = (vak or "").strip().upper()
+    if vak_norm not in {"BWI", "PIE", "MVI"}:
+        vak_norm = "BWI"
+
+    if base_dir is None:
+        # map waar deze file staat (workbook_builder.py) -> project root
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    return os.path.join(base_dir, "templates_docx", f"{vak_norm}_template.docx")
+
+
+def build_workbook_basic_from_template(meta: dict) -> io.BytesIO:
+    """
+    Basis werkboekje:
+    - Laadt Word template op basis van vak (header/footer/achtergrond komt uit template)
+    - Vult placeholders als ze bestaan
+    - Als placeholders niet bestaan: zet een klein blokje bovenaan het document
+    """
+    vak = meta.get("vak", "BWI")
+    template_path = _template_path_for_vak(vak)
+
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template niet gevonden: {template_path}")
+
+    doc = Document(template_path)
+
+    titel = (meta.get("opdracht_titel") or "").strip()
+    docent = (meta.get("docent") or "").strip()
+    duur = (meta.get("duur") or "").strip()
+    vak_norm = (vak or "BWI").strip().upper()
+
+    # Placeholders die jij eventueel in je templates kunt zetten (mag ook leeg blijven)
+    replacements = {
+        "{{TITEL}}": titel,
+        "{{DOCENT}}": docent,
+        "{{DUUR}}": duur,
+        "{{VAK}}": vak_norm,
+    }
+
+    replaced = _replace_text_everywhere(doc, replacements)
+
+    # Als er géén placeholders zijn in je template, zetten we minimaal een netjes blok bovenaan
+    if replaced == 0:
+        # Voeg bovenaan toe: titel + basisinfo (we zetten het aan het begin)
+        # python-docx kan niet echt "insert at top" zonder truc; dit is een nette workaround:
+        first_para = doc.paragraphs[0] if doc.paragraphs else doc.add_paragraph()
+        first_para.insert_paragraph_before(titel or "Werkboekje")
+        doc.paragraphs[0].style = doc.styles["Title"] if "Title" in [s.name for s in doc.styles] else doc.paragraphs[0].style
+
+        if vak_norm or docent or duur:
+            info = []
+            if vak_norm:
+                info.append(f"Vak: {vak_norm}")
+            if docent:
+                info.append(f"Docent: {docent}")
+            if duur:
+                info.append(f"Duur: {duur}")
+            first_para.insert_paragraph_before(" · ".join(info))
 
     out = io.BytesIO()
     doc.save(out)
     out.seek(0)
     return out
+
+
+# Backwards compatible naam (zodat je app.py straks kan blijven uitbreiden)
+def build_workbook_docx_front_and_steps(meta: dict, steps: list[dict]) -> io.BytesIO:
+    """
+    Voor nu: alleen basis vanuit template.
+    Later kunnen we hier steps/materiaalstaat/etc. in toevoegen.
+    """
+    return build_workbook_basic_from_template(meta)
 
