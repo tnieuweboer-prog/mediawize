@@ -153,6 +153,38 @@ input[type="text"], textarea {{
   white-space: pre;
 }}
 
+.result-header {{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}}
+
+.result-header h2 {{
+  margin: 0;
+  font-size: 16px;
+}}
+
+.result-header .sub {{
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}}
+
+.btn-copy {{
+  background: #1e293b;
+  color: #e5e7eb;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}}
+
+.btn-copy:hover {{
+  background: #334155;
+}}
 
 button {{
   background:var(--accent);
@@ -225,10 +257,18 @@ def html_page(error=None, result=None):
 
     if result:
         result_block = f"""
-        <div class="code-area">
-        <h2>Gegenereerde HTML</h2>
-        <textarea readonly>{escape(result)}</textarea>
-        </div>
+          <div class="result-header">
+            <div>
+              <h2>Gegenereerde HTML</h2>
+              <p class="sub">Kopieer en plak in Stermonitor / ELO</p>
+            </div>
+            <button type="button" class="btn-copy" onclick="copyHTML()">📋 Kopiëren</button>
+          </div>
+          
+          <div class="code-area">
+            <textarea id="htmlResult" readonly>...</textarea>
+          </div>
+
         """
 
     return BASE_PAGE.format(
