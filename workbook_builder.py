@@ -19,22 +19,28 @@ def _p(doc, text="", bold=False, size=12, align=None):
 
 
 def add_logo_to_header(section, logo_bytes: bytes):
+    """Logo is optioneel. Als het add_picture faalt, slaan we het over."""
     header = section.header
-    paragraph = header.paragraphs[0]
+    paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
     paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     run = paragraph.add_run()
-    run.add_picture(io.BytesIO(logo_bytes), width=Inches(1.0), height=Inches(1.0))
+    try:
+        run.add_picture(io.BytesIO(logo_bytes), width=Inches(1.0), height=Inches(1.0))
+    except Exception:
+        # logo is optioneel; nooit de hele build laten crashen
+        pass
 
 
 def _force_cell_vertical_center(cell):
     tc_pr = cell._tc.get_or_add_tcPr()
-    tc_pr.append(parse_xml(r'<w:vAlign %s w:val="center"/>' % nsdecls('w')))
+    tc_pr.append(parse_xml(r'<w:vAlign %s w:val="center"/>' % nsdecls("w")))
     cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
     for p in cell.paragraphs:
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 
 def add_materiaalstaat_page(doc: Document, materialen: list[dict]):
+    """Voegt materiaalstaat toe op eigen pagina."""
     doc.add_page_break()
 
     title_p = doc.add_paragraph()
@@ -49,6 +55,7 @@ def add_materiaalstaat_page(doc: Document, materialen: list[dict]):
     table = doc.add_table(rows=1, cols=len(cols))
     table.style = "Table Grid"
 
+    # header
     hdr_cells = table.rows[0].cells
     for i, col_name in enumerate(cols):
         cell = hdr_cells[i]
@@ -58,11 +65,13 @@ def add_materiaalstaat_page(doc: Document, materialen: list[dict]):
                 r.font.bold = True
                 r.font.name = "Arial"
                 r.font.size = Pt(12)
+
         cell._element.get_or_add_tcPr().append(
             parse_xml(r'<w:shd {} w:fill="D9D9D9"/>'.format(nsdecls("w")))
         )
         _force_cell_vertical_center(cell)
 
+    # data
     for item in materialen:
         row_cells = table.add_row().cells
         for j, key in enumerate(cols):
@@ -75,6 +84,7 @@ def add_materiaalstaat_page(doc: Document, materialen: list[dict]):
                     r.font.size = Pt(12)
             _force_cell_vertical_center(cell)
 
+        # rijhoogte vergroten
         tr = row_cells[0]._tc.getparent()
         trPr = tr.get_or_add_trPr()
         trHeight = parse_xml(r'<w:trHeight {} w:val="600"/>'.format(nsdecls("w")))
@@ -98,35 +108,29 @@ def add_cover_page(
     if logo:
         add_logo_to_header(doc.sections[0], logo)
 
-    _p(doc, "Opdracht :", bold=True, size=14)
+    _p(doc, "Opdracht", bold=True, size=14)
     _p(doc, opdracht_titel or " ", bold=True, size=28)
     _p(doc, "")
     _p(doc, vak or "", bold=True, size=14)
 
-    if profieldeel:
-        _p(doc, f"Keuze/profieldeel: {profieldeel}", size=12)
-    else:
-        _p(doc, "Keuze/profieldeel:", size=12)
-
-    if docent:
-        _p(doc, f"Docent: {docent}", size=12)
-    else:
-        _p(doc, "Docent:", size=12)
-
-    if duur:
-        _p(doc, f"Duur van de opdracht:     {duur}", size=12)
-    else:
-        _p(doc, "Duur van de opdracht:", size=12)
+    _p(doc, f"Keuze/profieldeel: {profieldeel}" if profieldeel else "Keuze/profieldeel:", size=12)
+    _p(doc, f"Docent: {docent}" if docent else "Docent:", size=12)
+    _p(doc, f"Duur van de opdracht: {duur}" if duur else "Duur van de opdracht:", size=12)
 
     _p(doc, "")
 
+    # cover-afbeelding (optioneel en crash-proof)
     if cover_bytes:
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        r = p.add_run()
-        r.add_picture(io.BytesIO(cover_bytes), width=Inches(4.5))
-        _p(doc, "")
+        try:
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            r = p.add_run()
+            r.add_picture(io.BytesIO(cover_bytes), width=Inches(4.5))
+            _p(doc, "")
+        except Exception:
+            pass
 
+    # naam / klas
     table = doc.add_table(rows=2, cols=2)
     table.style = "Table Grid"
     table.rows[0].cells[0].text = "Naam:"
@@ -147,10 +151,9 @@ def add_cover_page(
 
 def build_workbook_docx_front_and_steps(meta: dict, steps: list[dict]) -> io.BytesIO:
     """
-    Bouwt een volledig werkboekje:
     - Voorpagina
-    - (optioneel) materiaalstaat
-    - elke stap op een eigen pagina
+    - (optioneel) Materiaalstaat
+    - Elke stap/pagina op EIGEN pagina
     """
     doc = Document()
 
@@ -168,7 +171,8 @@ def build_workbook_docx_front_and_steps(meta: dict, steps: list[dict]) -> io.Byt
     if meta.get("include_materiaalstaat"):
         add_materiaalstaat_page(doc, meta.get("materialen", []))
 
-    for idx, step in enumerate(steps):
+    # elke stap op eigen pagina
+    for step in steps:
         doc.add_page_break()
 
         if step.get("title"):
@@ -179,10 +183,15 @@ def build_workbook_docx_front_and_steps(meta: dict, steps: list[dict]) -> io.Byt
 
         for img_bytes in step.get("images", []):
             if img_bytes:
-                doc.add_picture(io.BytesIO(img_bytes), width=Inches(4.5))
-                _p(doc, "")
+                try:
+                    doc.add_picture(io.BytesIO(img_bytes), width=Inches(4.5))
+                    _p(doc, "")
+                except Exception:
+                    # ook afbeeldingen bij stappen mogen nooit crashen
+                    pass
 
     out = io.BytesIO()
     doc.save(out)
     out.seek(0)
     return out
+
