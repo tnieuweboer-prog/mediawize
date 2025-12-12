@@ -239,6 +239,17 @@ button:hover {{
   </div>
 </aside>
 
+<script>
+function copyHTML() {{
+  const el = document.getElementById("htmlResult");
+  if (!el) return;
+  el.select();
+  el.setSelectionRange(0, 999999);
+  document.execCommand("copy");
+}}
+</script>
+
+
 <main class="content">
 {content}
 </main>
