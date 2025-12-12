@@ -332,7 +332,6 @@ def workbook_page(error=None):
           <h1>Werkboekjes-generator</h1>
           <p class="lead">Maak automatisch Word-werkboekjes voor lessen.</p>
           {error_block}
-          <p>Deze tool gebruikt dezelfde logica als je Streamlit-versie.</p>
           <p>(Formulier kun je hier stap voor stap verder uitbreiden.)</p>
         </div>
         """
