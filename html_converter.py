@@ -1,9 +1,11 @@
 import os
 import uuid
+import base64
 from html import escape
-from typing import List, Dict, Optional
+from typing import Optional, List, Dict
 from docx import Document
 
+# Pillow voor beeldmaten
 try:
     from PIL import Image
     PIL_OK = True
@@ -11,10 +13,23 @@ except Exception:
     PIL_OK = False
 
 
-# Absolute map waar images opgeslagen worden (zelfde projectmap als app.py)
+# =========================
+# CONFIG
+# =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Map op VPS waar nginx /uploads/ naar wijst
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")  # -> /opt/mediawize/uploads
-UPLOAD_URL_PREFIX = "https://app.mediawize.nl/uploads"  # nginx serveert dit naar /opt/mediawize/uploads/
+
+# Voor Stermonitor: absolute URL nodig
+UPLOAD_BASE_URL = "https://app.mediawize.nl/uploads"
+
+# Fallback: als wegschrijven faalt, toch base64 gebruiken
+FALLBACK_TO_BASE64 = True
+
+# Small threshold (zoals in jouw code)
+SMALL_W = 100
+SMALL_H = 100
 
 
 def _ensure_upload_dir():
@@ -22,7 +37,7 @@ def _ensure_upload_dir():
 
 
 def _image_size(img_bytes: bytes) -> Optional[tuple]:
-    """Bepaal (breedte, hoogte) van afbeelding met Pillow (optioneel)."""
+    """Bepaal (breedte, hoogte) van afbeelding met Pillow."""
     if not PIL_OK:
         return None
     try:
@@ -33,62 +48,57 @@ def _image_size(img_bytes: bytes) -> Optional[tuple]:
         return None
 
 
-def _ext_from_content_type(content_type: Optional[str]) -> str:
-    """Bepaal extensie op basis van mime type."""
-    if not content_type:
-        return "bin"
-    ct = content_type.lower().strip()
+def _guess_ext(blob: bytes, content_type: Optional[str]) -> str:
+    """Bepaal bestands-extensie op basis van content_type of Pillow."""
+    if content_type:
+        ct = content_type.lower().strip()
+        mapping = {
+            "image/png": "png",
+            "image/jpeg": "jpg",
+            "image/jpg": "jpg",
+            "image/gif": "gif",
+            "image/webp": "webp",
+            "image/bmp": "bmp",
+            "image/tiff": "tiff",
+            "image/x-emf": "emf",
+            "image/x-wmf": "wmf",
+            "image/svg+xml": "svg",
+        }
+        if ct in mapping:
+            return mapping[ct]
 
-    mapping = {
-        "image/png": "png",
-        "image/jpeg": "jpg",
-        "image/jpg": "jpg",
-        "image/gif": "gif",
-        "image/webp": "webp",
-        "image/bmp": "bmp",
-        "image/tiff": "tiff",
-        "image/x-emf": "emf",
-        "image/x-wmf": "wmf",
-        "image/svg+xml": "svg",
-    }
-    return mapping.get(ct, "bin")
-
-
-def _save_image_to_uploads(blob: bytes, content_type: Optional[str]) -> str:
-    """
-    Slaat de afbeelding op in UPLOAD_DIR en retourneert de publieke URL (/uploads/..).
-    """
-    _ensure_upload_dir()
-
-    ext = _ext_from_content_type(content_type)
-
-    # fallback: als content_type onbekend is, probeer met Pillow te raden
-    if ext == "bin" and PIL_OK:
+    # probeer via Pillow
+    if PIL_OK:
         try:
             from io import BytesIO
             with Image.open(BytesIO(blob)) as im:
                 fmt = (im.format or "").lower()
                 if fmt in ("jpeg", "jpg"):
-                    ext = "jpg"
-                elif fmt in ("png", "gif", "webp", "bmp", "tiff"):
-                    ext = fmt
+                    return "jpg"
+                if fmt in ("png", "gif", "webp", "bmp", "tiff"):
+                    return fmt
         except Exception:
             pass
 
-    fname = f"docx_{uuid.uuid4().hex}.{ext}"
-    fpath = os.path.join(UPLOAD_DIR, fname)
+    return "bin"
 
-    with open(fpath, "wb") as f:
-        f.write(blob)
 
-    return f"{UPLOAD_URL_PREFIX}/{fname}"
+def _save_image_and_get_url(blob: bytes, content_type: Optional[str]) -> Optional[str]:
+    """Sla blob op in UPLOAD_DIR en retourneer absolute URL voor Stermonitor."""
+    try:
+        _ensure_upload_dir()
+        ext = _guess_ext(blob, content_type)
+        fname = f"docx_{uuid.uuid4().hex}.{ext}"
+        fpath = os.path.join(UPLOAD_DIR, fname)
+        with open(fpath, "wb") as f:
+            f.write(blob)
+        return f"{UPLOAD_BASE_URL}/{fname}"
+    except Exception:
+        return None
 
 
 def _img_infos_for_paragraph(para, doc: Document) -> List[Dict]:
-    """
-    Zoek alle afbeeldingen in paragraaf en retourneer info.
-    We schrijven nu bestanden weg naar server i.p.v. base64.
-    """
+    """Zoek alle afbeeldingen in paragraaf en retourneer info."""
     infos: List[Dict] = []
 
     for run in para.runs:
@@ -113,12 +123,19 @@ def _img_infos_for_paragraph(para, doc: Document) -> List[Dict]:
             size = _image_size(blob)
             w = size[0] if size else None
             h = size[1] if size else None
-            small = (w and h and w < 100 and h < 100)
+            small = bool(w and h and w < SMALL_W and h < SMALL_H)
 
-            try:
-                url = _save_image_to_uploads(blob, content_type)
-            except Exception:
-                # Als wegschrijven faalt, sla hem over
+            # 1) probeer opslaan op server
+            url = _save_image_and_get_url(blob, content_type)
+
+            # 2) fallback base64 (optioneel)
+            if not url and FALLBACK_TO_BASE64:
+                b64 = base64.b64encode(blob).decode("ascii")
+                # mime wat netter:
+                mime = (content_type or "image/png").split(";")[0]
+                url = f"data:{mime};base64,{b64}"
+
+            if not url:
                 continue
 
             infos.append({"url": url, "w": w, "h": h, "small": small})
@@ -138,9 +155,14 @@ def _is_heading(para) -> int:
     return 0
 
 
-def docx_to_html(path: str) -> str:
-    """DOCX → HTML met simpele layout en afbeeldingen als server-URL."""
-    doc = Document(path)
+def docx_to_html(path_or_filelike) -> str:
+    """
+    DOCX → HTML
+    - Tekst als h1/h2/h3/p
+    - Afbeeldingen: small samen in flex-rij, big apart (zoals jouw voorwaarden)
+    - Afbeeldingen via server URLs (absolute) voor Stermonitor
+    """
+    doc = Document(path_or_filelike)
 
     out = [
         "<!DOCTYPE html>",
@@ -170,17 +192,29 @@ def docx_to_html(path: str) -> str:
         elif text:
             out.append(f"<p>{escape(text)}</p>")
 
-        # Afbeeldingen in deze paragraaf
+        # Afbeeldingen (voorwaarden overnemen)
         imgs = _img_infos_for_paragraph(para, doc)
-        for i in imgs:
-            style_bits = []
-            if i["w"]:
-                style_bits.append(f"max-width:{i['w']}px")
-            if i["h"]:
-                style_bits.append(f"max-height:{i['h']}px")
-            style = ";".join(style_bits) if style_bits else "max-width:300px;max-height:300px"
+        if not imgs:
+            continue
+
+        small_imgs = [i for i in imgs if i["small"]]
+        big_imgs = [i for i in imgs if not i["small"]]
+
+        # Small: samen in flex
+        if small_imgs:
+            out.append('<div style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0;">')
+            for i in small_imgs:
+                out.append(
+                    f'<img src="{i["url"]}" alt="" '
+                    f'style="max-width:{i["w"] or 100}px;max-height:{i["h"] or 100}px;object-fit:contain;" />'
+                )
+            out.append("</div>")
+
+        # Big: apart
+        for i in big_imgs:
             out.append(
-                f'<img src="{i["url"]}" alt="" style="{style};object-fit:contain;">'
+                f'<p><img src="{i["url"]}" alt="" '
+                f'style="max-width:300px;max-height:300px;object-fit:contain;" /></p>'
             )
 
     out.append("</div>")
@@ -188,5 +222,4 @@ def docx_to_html(path: str) -> str:
     out.append("</html>")
 
     return "\n".join(out)
-
 
