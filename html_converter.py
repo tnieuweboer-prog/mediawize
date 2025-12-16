@@ -1,4 +1,5 @@
-import base64
+import os
+import uuid
 from html import escape
 from typing import List, Dict, Optional
 from docx import Document
@@ -10,11 +11,20 @@ except Exception:
     PIL_OK = False
 
 
+# Absolute map waar images opgeslagen worden (zelfde projectmap als app.py)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")  # -> /opt/mediawize/uploads
+UPLOAD_URL_PREFIX = "/uploads"  # nginx serveert dit naar /opt/mediawize/uploads/
+
+
+def _ensure_upload_dir():
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
 def _image_size(img_bytes: bytes) -> Optional[tuple]:
-    """Bepaal (breedte, hoogte) van afbeelding met Pillow."""
+    """Bepaal (breedte, hoogte) van afbeelding met Pillow (optioneel)."""
     if not PIL_OK:
         return None
-
     try:
         from io import BytesIO
         with Image.open(BytesIO(img_bytes)) as im:
@@ -23,8 +33,62 @@ def _image_size(img_bytes: bytes) -> Optional[tuple]:
         return None
 
 
+def _ext_from_content_type(content_type: Optional[str]) -> str:
+    """Bepaal extensie op basis van mime type."""
+    if not content_type:
+        return "bin"
+    ct = content_type.lower().strip()
+
+    mapping = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/jpg": "jpg",
+        "image/gif": "gif",
+        "image/webp": "webp",
+        "image/bmp": "bmp",
+        "image/tiff": "tiff",
+        "image/x-emf": "emf",
+        "image/x-wmf": "wmf",
+        "image/svg+xml": "svg",
+    }
+    return mapping.get(ct, "bin")
+
+
+def _save_image_to_uploads(blob: bytes, content_type: Optional[str]) -> str:
+    """
+    Slaat de afbeelding op in UPLOAD_DIR en retourneert de publieke URL (/uploads/..).
+    """
+    _ensure_upload_dir()
+
+    ext = _ext_from_content_type(content_type)
+
+    # fallback: als content_type onbekend is, probeer met Pillow te raden
+    if ext == "bin" and PIL_OK:
+        try:
+            from io import BytesIO
+            with Image.open(BytesIO(blob)) as im:
+                fmt = (im.format or "").lower()
+                if fmt in ("jpeg", "jpg"):
+                    ext = "jpg"
+                elif fmt in ("png", "gif", "webp", "bmp", "tiff"):
+                    ext = fmt
+        except Exception:
+            pass
+
+    fname = f"docx_{uuid.uuid4().hex}.{ext}"
+    fpath = os.path.join(UPLOAD_DIR, fname)
+
+    with open(fpath, "wb") as f:
+        f.write(blob)
+
+    return f"{UPLOAD_URL_PREFIX}/{fname}"
+
+
 def _img_infos_for_paragraph(para, doc: Document) -> List[Dict]:
-    """Zoek alle afbeeldingen in paragraaf en retourneer info."""
+    """
+    Zoek alle afbeeldingen in paragraaf en retourneer info.
+    We schrijven nu bestanden weg naar server i.p.v. base64.
+    """
     infos: List[Dict] = []
 
     for run in para.runs:
@@ -42,6 +106,7 @@ def _img_infos_for_paragraph(para, doc: Document) -> List[Dict]:
             try:
                 part = doc.part.related_parts[rId]
                 blob = part.blob
+                content_type = getattr(part, "content_type", None)
             except Exception:
                 continue
 
@@ -50,9 +115,11 @@ def _img_infos_for_paragraph(para, doc: Document) -> List[Dict]:
             h = size[1] if size else None
             small = (w and h and w < 100 and h < 100)
 
-            # Altijd base64 inline, geen Cloudinary
-            b64 = base64.b64encode(blob).decode("ascii")
-            url = f"data:image/png;base64,{b64}"
+            try:
+                url = _save_image_to_uploads(blob, content_type)
+            except Exception:
+                # Als wegschrijven faalt, sla hem over
+                continue
 
             infos.append({"url": url, "w": w, "h": h, "small": small})
 
@@ -72,7 +139,7 @@ def _is_heading(para) -> int:
 
 
 def docx_to_html(path: str) -> str:
-    """DOCX → HTML met simpele layout en inline afbeeldingen."""
+    """DOCX → HTML met simpele layout en afbeeldingen als server-URL."""
     doc = Document(path)
 
     out = [
@@ -83,8 +150,7 @@ def docx_to_html(path: str) -> str:
         "<title>DOCX naar HTML</title>",
         "<style>",
         "body { margin: 0; padding: 0; font-family: Arial, sans-serif; }",
-        ".page { max-width: 900px; margin: 0 auto; padding: 2rem; "
-        "background: #e5f7e5; }",
+        ".page { max-width: 900px; margin: 0 auto; padding: 2rem; background: #e5f7e5; }",
         "img { display: block; margin: 0.5rem 0; }",
         "</style>",
         "</head>",
@@ -122,4 +188,5 @@ def docx_to_html(path: str) -> str:
     out.append("</html>")
 
     return "\n".join(out)
+
 
