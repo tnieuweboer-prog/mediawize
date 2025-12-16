@@ -14,7 +14,7 @@ except Exception:
 # Absolute map waar images opgeslagen worden (zelfde projectmap als app.py)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")  # -> /opt/mediawize/uploads
-UPLOAD_URL_PREFIX = "/uploads"  # nginx serveert dit naar /opt/mediawize/uploads/
+UPLOAD_URL_PREFIX = "https://app.mediawize.nl/uploads"  # nginx serveert dit naar /opt/mediawize/uploads/
 
 
 def _ensure_upload_dir():
