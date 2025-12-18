@@ -5,7 +5,7 @@ from html import escape
 from typing import List, Dict, Optional, Any
 from docx import Document
 
-# Pillow (optioneel)
+# Pillow optioneel (niet vereist)
 try:
     from PIL import Image  # noqa: F401
     PIL_OK = True
@@ -18,15 +18,15 @@ except Exception:
 # =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Nginx moet /uploads/ mappen naar deze map (bij jou: /opt/mediawize/uploads)
+# Map waar images fysiek opgeslagen worden
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 
-# Voor Stermonitor moet dit ABSOLUUT zijn
+# Stermonitor heeft absolute URL nodig
 UPLOAD_BASE_URL = "https://app.mediawize.nl/uploads"
 
-# Afbeelding kolom links
-IMG_COL_WIDTH_PX = 320
-IMG_MAX_WIDTH_PX = 300
+# Linkerkolom image styling
+IMG_MAX_WIDTH_PX = 360  # past in linkercel (371px) met padding
+IMG_BLOCK_MARGIN_PX = 10
 
 
 # =========================
@@ -69,7 +69,6 @@ def _is_heading1(p) -> bool:
 
 
 def _looks_like_numbered_item(p) -> bool:
-    """Robuust voor NL/EN Word: style bevat vaak list + number/nummer."""
     name = (getattr(p.style, "name", "") or "").lower()
     return ("list" in name) and (("number" in name) or ("nummer" in name))
 
@@ -78,9 +77,7 @@ def _looks_like_bullet_item(p, text: str) -> bool:
     name = (getattr(p.style, "name", "") or "").lower()
     if ("list" in name) and (("bullet" in name) or ("opsom" in name) or ("bollet" in name)):
         return True
-    if text.strip().startswith("-"):
-        return True
-    return False
+    return text.strip().startswith("-")
 
 
 def _get_images_from_paragraph(p, doc: Document) -> List[str]:
@@ -97,9 +94,7 @@ def _get_images_from_paragraph(p, doc: Document) -> List[str]:
                 continue
             try:
                 part = doc.part.related_parts[rId]
-                blob = part.blob
-                ctype = getattr(part, "content_type", None)
-                url = _save_image(blob, ctype)
+                url = _save_image(part.blob, getattr(part, "content_type", None))
                 if url:
                     urls.append(url)
             except Exception:
@@ -108,7 +103,7 @@ def _get_images_from_paragraph(p, doc: Document) -> List[str]:
 
 
 def _is_caption_paragraph(p) -> bool:
-    """Caption detectie: cursief of vet."""
+    """Caption detectie: cursief of vet (zoals je gebruikte)."""
     try:
         return any((r.italic or r.bold) for r in p.runs)
     except Exception:
@@ -116,15 +111,9 @@ def _is_caption_paragraph(p) -> bool:
 
 
 # =========================
-# HTML builder
+# HTML builder (images LEFT, text RIGHT)
 # =========================
 def _step_table_html(step: Dict[str, Any]) -> str:
-    """
-    Bouwt Stermonitor-stijl stap-blok.
-    Onderste rij (content):
-      - links: afbeelding(en) bij elk tekstblok
-      - rechts: tekst
-    """
     title = escape(step.get("title") or "Stap")
 
     leerdoelen = step.get("leerdoelen") or []
@@ -134,87 +123,69 @@ def _step_table_html(step: Dict[str, Any]) -> str:
     leerdoelen_li = "".join(f"<li>{escape(x)}</li>" for x in leerdoelen)
     begrippen_divs = "".join(f"<div>&nbsp;- {escape(x)}</div>" for x in begrippen)
 
-    # Nested rows: IMAGE LEFT, TEXT RIGHT
-    nested_rows: List[str] = []
+    # Verzamel alle afbeeldingen (met captions) uit blocks -> links
+    left_parts: List[str] = []
     for b in blocks:
-        txt = (b.get("text") or "").strip()
         imgs = b.get("images") or []
         cap = (b.get("caption") or "").strip()
 
-        text_html = f"<p>{escape(txt)}</p>" if txt else ""
-
-        imgcol_html = ""
-        if imgs:
-            img_parts = []
-            for u in imgs:
-                img_parts.append(
-                    f'<img src="{escape(u)}" alt="" '
-                    f'style="display:block;margin:0 0 8px 0;max-width:{IMG_MAX_WIDTH_PX}px;height:auto;object-fit:contain;" />'
-                )
-            if cap:
-                img_parts.append(
-                    f'<p style="text-align:center;margin:0;"><em><strong>{escape(cap)}</strong></em></p>'
-                )
-            imgcol_html = "\n".join(img_parts)
-
-        if imgs:
-            # ✅ Afbeelding links, tekst rechts
-            nested_rows.append(
-                "<tr>"
-                f'<td style="vertical-align:top;width:{IMG_COL_WIDTH_PX}px;">{imgcol_html}</td>'
-                f'<td style="vertical-align:top;">{text_html}</td>'
-                "</tr>"
-            )
-        else:
-            # Geen image => tekst volle breedte
-            nested_rows.append(
-                "<tr>"
-                f'<td colspan="2" style="vertical-align:top;">{text_html}</td>'
-                "</tr>"
+        for u in imgs:
+            left_parts.append(
+                f'<div style="margin-bottom:{IMG_BLOCK_MARGIN_PX}px;">'
+                f'  <img src="{escape(u)}" alt="" '
+                f'       style="display:block;max-width:{IMG_MAX_WIDTH_PX}px;height:auto;object-fit:contain;" />'
+                f'</div>'
             )
 
-    nested_table = (
-        '<table style="width:100%;border-collapse:collapse;" cellpadding="6">'
-        + "".join(nested_rows)
-        + "</table>"
+        if cap and imgs:
+            left_parts.append(
+                f'<p style="text-align:center;margin:0 0 {IMG_BLOCK_MARGIN_PX}px 0;">'
+                f'<em><strong>{escape(cap)}</strong></em></p>'
+            )
+
+    left_img_html = "\n".join(left_parts)
+
+    # Tekst rechts (alle block teksten)
+    right_text_html = "".join(
+        f"<p>{escape((b.get('text') or '').strip())}</p>"
+        for b in blocks
+        if (b.get("text") or "").strip()
     )
 
     return f"""
-<table style="width: 875px; background-color: rgba(250, 227, 200, 1); border-color: rgba(250, 227, 200, 1)"
-       border="ja" cellpadding="10" class="striped bordered compressed margin-bottom">
+<table style="width: 875px; background-color: rgba(250, 227, 200, 1); border-color: rgba(250, 227, 200, 1)" border="ja" cellpadding="10" class="striped bordered compressed margin-bottom">
 <tbody>
-
 <tr style="height: 139px">
-  <td style="border-color: rgba(0, 0, 0, 1); background-color: rgba(212, 150, 74, 1); height: 139px; width: 944.5px"
-      colspan="2" class="black-border">
+  <td style="border-color: rgba(0, 0, 0, 1); background-color: rgba(212, 150, 74, 1); height: 139px; width: 944.5px" colspan="2" class="black-border">
     <h4><span style="color: rgba(0, 0, 0, 1)"><em><strong>{title}</strong></em></span></h4>
     <p><strong>Leerdoelen bij deze stap:</strong></p>
     <ol>
       {leerdoelen_li}
     </ol>
   </td>
-
-  <td style="border-color: rgba(0, 0, 0, 1); background-color: rgba(212, 150, 74, 1); vertical-align: top; height: 139px; width: 304.5px"
-      class="black-border">
+  <td style="border-color: rgba(0, 0, 0, 1); background-color: rgba(212, 150, 74, 1); vertical-align: top; height: 139px; width: 304.5px" class="black-border">
     <p><strong>Belangrijke begrippen:</strong></p>
     {begrippen_divs}
   </td>
 </tr>
 
 <tr style="height: 306px">
-  <td style="height: 306px; width: 371px">
-    <!-- (leeg: we plaatsen per tekstblok de afbeelding links in de nested table) -->
+  <!-- ✅ LINKS: ALLE AFBEELDINGEN -->
+  <td style="height: 306px; width: 371px; vertical-align: top;">
+    {left_img_html}
   </td>
 
-  <td style="height: 306px; width: 878px" colspan="2">
-    {nested_table}
+  <!-- ✅ RECHTS: ALLE TEKST -->
+  <td style="height: 306px; width: 878px; vertical-align: top;" colspan="2">
+    {right_text_html}
   </td>
 </tr>
-
 </tbody>
 </table>
 
-<div class="clearfix"></div><div class="clearfix"></div><div class="clearfix"></div>
+<div class="clearfix"></div>
+<div class="clearfix"></div>
+<div class="clearfix"></div>
 """.strip()
 
 
@@ -223,13 +194,14 @@ def _step_table_html(step: Dict[str, Any]) -> str:
 # =========================
 def docx_to_html(path: str) -> str:
     """
-    DOCX -> Stermonitor-stijl HTML.
-
-    Regels voor koppelen tekst+afbeelding:
-    - Tekstparagraaf => nieuw block
-    - Afbeelding in dezelfde paragraaf => hoort bij die block
-    - Afbeelding in volgende paragraaf zonder tekst => hoort bij vorige block
-    - Caption (cursief/vet) direct na image-only paragraaf => caption op vorige block
+    DOCX -> Stermonitor-stijl HTML
+    - Elke Kop1 = nieuwe stap
+    - Leerdoelen: na 'Leerdoelen...' en genummerde lijst
+    - Begrippen: na 'Belangrijke begrippen...' en bullets of '-'
+    - Uitleg: elke tekstparagraaf => block
+    - Afbeelding in dezelfde paragraaf => aan block gekoppeld
+    - Afbeelding op volgende lege paragraaf => aan vorige block gekoppeld
+    - Caption (cursief/vet) na image-only paragraaf => caption op vorige block
     - Geen Kop1? => 1 stap 'Les'
     """
     doc = Document(path)
@@ -260,11 +232,10 @@ def docx_to_html(path: str) -> str:
         return current["_last_block"]
 
     for p in doc.paragraphs:
-        text_raw = p.text or ""
-        text = text_raw.strip()
+        text = (p.text or "").strip()
         imgs = _get_images_from_paragraph(p, doc)
 
-        # Nieuwe stap
+        # Start stap
         if _is_heading1(p) and text:
             new_step(text)
             continue
@@ -287,7 +258,7 @@ def docx_to_html(path: str) -> str:
                 current["_mode"] = "begrippen"
                 continue
 
-        # Afbeelding zonder tekst => bij vorige block
+        # Image-only paragraph -> bij vorige block
         if imgs and not text:
             b = ensure_last_block()
             if b is not None:
@@ -311,7 +282,7 @@ def docx_to_html(path: str) -> str:
             current["begrippen"].append(text.lstrip("- ").strip())
             continue
 
-        # Uitleg: tekst => nieuw block (+ images in dezelfde paragraaf)
+        # Uitleg tekst -> nieuw block (met images als ze in dezelfde paragraaf zitten)
         if text:
             b = {"text": text, "images": [], "caption": ""}
             if imgs:
@@ -320,9 +291,6 @@ def docx_to_html(path: str) -> str:
             current["blocks"].append(b)
             current["_last_block"] = b
             continue
-
-        # Lege paragraaf zonder images => negeren
-        continue
 
     return "\n\n".join(_step_table_html(s) for s in steps)
 
