@@ -182,13 +182,14 @@ def _step_table_html(step: Dict[str, Any]) -> str:
                 )
             imgcol_html = "\n".join(img_parts)
 
-        if imgs:
-            nested_rows.append(
-                "<tr>"
-                f'<td style="vertical-align:top;">{text_html}</td>'
-                f'<td style="vertical-align:top;width:{IMG_COL_WIDTH_PX}px;">{imgcol_html}</td>'
-                "</tr>"
-            )
+            if imgs:
+                nested_rows.append(
+                    "<tr>"
+                    f'<td style="vertical-align:top;width:{IMG_COL_WIDTH_PX}px;">{imgcol_html}</td>'
+                    f'<td style="vertical-align:top;">{text_html}</td>'
+                    "</tr>"
+                )
+
         else:
             # geen image: volle breedte
             nested_rows.append(
