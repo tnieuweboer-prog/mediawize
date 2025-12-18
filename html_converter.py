@@ -5,7 +5,7 @@ from html import escape
 from typing import List, Dict, Optional, Any
 from docx import Document
 
-# Pillow (optioneel) – niet nodig voor werking, wel handig later
+# Pillow (optioneel)
 try:
     from PIL import Image  # noqa: F401
     PIL_OK = True
@@ -24,7 +24,7 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 # Voor Stermonitor moet dit ABSOLUUT zijn
 UPLOAD_BASE_URL = "https://app.mediawize.nl/uploads"
 
-# Afbeelding styling in kolom rechts
+# Afbeelding kolom links
 IMG_COL_WIDTH_PX = 320
 IMG_MAX_WIDTH_PX = 300
 
@@ -37,9 +37,7 @@ def _ensure_upload_dir():
 
 
 def _save_image(blob: bytes, content_type: Optional[str]) -> Optional[str]:
-    """
-    Sla image blob op in UPLOAD_DIR en retourneer absolute URL.
-    """
+    """Sla image blob op in UPLOAD_DIR en retourneer absolute URL."""
     try:
         _ensure_upload_dir()
 
@@ -71,9 +69,7 @@ def _is_heading1(p) -> bool:
 
 
 def _looks_like_numbered_item(p) -> bool:
-    """
-    Robuust voor NL/EN Word: style bevat vaak list + number/nummer.
-    """
+    """Robuust voor NL/EN Word: style bevat vaak list + number/nummer."""
     name = (getattr(p.style, "name", "") or "").lower()
     return ("list" in name) and (("number" in name) or ("nummer" in name))
 
@@ -112,9 +108,7 @@ def _get_images_from_paragraph(p, doc: Document) -> List[str]:
 
 
 def _is_caption_paragraph(p) -> bool:
-    """
-    Simpele caption detectie: cursief of vet (zoals je eerder deed).
-    """
+    """Caption detectie: cursief of vet."""
     try:
         return any((r.italic or r.bold) for r in p.runs)
     except Exception:
@@ -122,15 +116,15 @@ def _is_caption_paragraph(p) -> bool:
 
 
 # =========================
-# HTML builders
+# HTML builder
 # =========================
 def _step_table_html(step: Dict[str, Any]) -> str:
     """
-    Bouwt jouw Stermonitor-stijl stap-blok:
-    - header rij met titel/leerdoelen + begrippen
-    - content rij met links (eventuele header image) en rechts nested table per tekstblok + image(s)
+    Bouwt Stermonitor-stijl stap-blok.
+    Onderste rij (content):
+      - links: afbeelding(en) bij elk tekstblok
+      - rechts: tekst
     """
-
     title = escape(step.get("title") or "Stap")
 
     leerdoelen = step.get("leerdoelen") or []
@@ -140,36 +134,17 @@ def _step_table_html(step: Dict[str, Any]) -> str:
     leerdoelen_li = "".join(f"<li>{escape(x)}</li>" for x in leerdoelen)
     begrippen_divs = "".join(f"<div>&nbsp;- {escape(x)}</div>" for x in begrippen)
 
-    # LEFT cell: “header image” (eerste image van eerste block, als je wilt)
-    # Jij wil vooral “naast elk stukje tekst”, dus we laten links leeg OF tonen alleen als er echt iets is.
-    left_img_html = ""
-    if step.get("left_image_url"):
-        left_img_html = (
-            f'<p><img src="{escape(step["left_image_url"])}" alt="" '
-            f'style="max-width:{IMG_MAX_WIDTH_PX}px;height:auto;object-fit:contain;" /></p>'
-        )
-        if step.get("left_caption"):
-            left_img_html += (
-                f'<p style="text-align:center"><em><strong>{escape(step["left_caption"])}</strong></em></p>'
-            )
-
-    # RIGHT cell content: nested table with rows:
-    # - if block has images => 2 columns (text | image column)
-    # - else => 1 column spanning 2 columns
+    # Nested rows: IMAGE LEFT, TEXT RIGHT
     nested_rows: List[str] = []
     for b in blocks:
         txt = (b.get("text") or "").strip()
         imgs = b.get("images") or []
         cap = (b.get("caption") or "").strip()
 
-        text_html = ""
-        if txt:
-            # behoud simpele alineas; je kunt later <br> logica toevoegen als je wil
-            text_html = f"<p>{escape(txt)}</p>"
+        text_html = f"<p>{escape(txt)}</p>" if txt else ""
 
         imgcol_html = ""
         if imgs:
-            # meerdere afbeeldingen onder elkaar in rechter kolom
             img_parts = []
             for u in imgs:
                 img_parts.append(
@@ -182,16 +157,16 @@ def _step_table_html(step: Dict[str, Any]) -> str:
                 )
             imgcol_html = "\n".join(img_parts)
 
-            if imgs:
-                nested_rows.append(
-                    "<tr>"
-                    f'<td style="vertical-align:top;width:{IMG_COL_WIDTH_PX}px;">{imgcol_html}</td>'
-                    f'<td style="vertical-align:top;">{text_html}</td>'
-                    "</tr>"
-                )
-
+        if imgs:
+            # ✅ Afbeelding links, tekst rechts
+            nested_rows.append(
+                "<tr>"
+                f'<td style="vertical-align:top;width:{IMG_COL_WIDTH_PX}px;">{imgcol_html}</td>'
+                f'<td style="vertical-align:top;">{text_html}</td>'
+                "</tr>"
+            )
         else:
-            # geen image: volle breedte
+            # Geen image => tekst volle breedte
             nested_rows.append(
                 "<tr>"
                 f'<td colspan="2" style="vertical-align:top;">{text_html}</td>'
@@ -228,7 +203,7 @@ def _step_table_html(step: Dict[str, Any]) -> str:
 
 <tr style="height: 306px">
   <td style="height: 306px; width: 371px">
-    {left_img_html}
+    <!-- (leeg: we plaatsen per tekstblok de afbeelding links in de nested table) -->
   </td>
 
   <td style="height: 306px; width: 878px" colspan="2">
@@ -250,16 +225,12 @@ def docx_to_html(path: str) -> str:
     """
     DOCX -> Stermonitor-stijl HTML.
 
-    Belangrijkste regels:
-    - Elke Kop1/Heading1 start een nieuwe stap.
-    - 'Leerdoelen...' zet mode leerdoelen: p in numbered list wordt leerdoel.
-    - 'Belangrijke begrippen...' of 'Begrippen...' zet mode begrippen: bullets / '-' regels worden begrippen.
-    - Voor de uitleg maken we BLOCKS:
-        * elke tekstparagraaf is een block
-        * afbeeldingen in dezelfde paragraaf -> horen bij die block
-        * afbeelding in volgende paragraaf met geen tekst -> hoort bij vorige block
-        * caption (cursief/vet) direct na een image-only paragraaf -> caption op vorige block
-    - Als er geen Kop1 in het document zit: alles wordt 1 stap 'Les'.
+    Regels voor koppelen tekst+afbeelding:
+    - Tekstparagraaf => nieuw block
+    - Afbeelding in dezelfde paragraaf => hoort bij die block
+    - Afbeelding in volgende paragraaf zonder tekst => hoort bij vorige block
+    - Caption (cursief/vet) direct na image-only paragraaf => caption op vorige block
+    - Geen Kop1? => 1 stap 'Les'
     """
     doc = Document(path)
 
@@ -274,14 +245,11 @@ def docx_to_html(path: str) -> str:
             "begrippen": [],
             "blocks": [],
             "_mode": None,
-            "_last_block": None,          # laatste uitleg block
-            "_pending_image_block": None, # block dat net images kreeg en wacht op caption
-            "left_image_url": None,
-            "left_caption": None,
+            "_last_block": None,
+            "_pending_image_block": None,
         }
         steps.append(current)
 
-    # Helper: maak/haal laatste block
     def ensure_last_block():
         if current is None:
             return None
@@ -291,18 +259,17 @@ def docx_to_html(path: str) -> str:
             current["_last_block"] = b
         return current["_last_block"]
 
-    # Itereer door paragraphs
     for p in doc.paragraphs:
         text_raw = p.text or ""
         text = text_raw.strip()
         imgs = _get_images_from_paragraph(p, doc)
 
-        # Start stap
+        # Nieuwe stap
         if _is_heading1(p) and text:
             new_step(text)
             continue
 
-        # Fallback: geen step yet, maar wél content => maak 'Les'
+        # Fallback stap
         if current is None and (text or imgs):
             new_step("Les")
 
@@ -311,7 +278,7 @@ def docx_to_html(path: str) -> str:
 
         low = text.lower()
 
-        # Mode switches (alleen als er tekst is)
+        # Mode switches
         if text:
             if low.startswith("leerdoelen"):
                 current["_mode"] = "leerdoelen"
@@ -320,7 +287,7 @@ def docx_to_html(path: str) -> str:
                 current["_mode"] = "begrippen"
                 continue
 
-        # Image-only paragraph: koppel aan vorige block (naast tekst)
+        # Afbeelding zonder tekst => bij vorige block
         if imgs and not text:
             b = ensure_last_block()
             if b is not None:
@@ -328,7 +295,7 @@ def docx_to_html(path: str) -> str:
                 current["_pending_image_block"] = b
             continue
 
-        # Caption: tekst met italic/bold en er is een pending image-block
+        # Caption na image-only
         if text and current.get("_pending_image_block") is not None and _is_caption_paragraph(p):
             current["_pending_image_block"]["caption"] = text
             current["_pending_image_block"] = None
@@ -344,37 +311,18 @@ def docx_to_html(path: str) -> str:
             current["begrippen"].append(text.lstrip("- ").strip())
             continue
 
-        # UITLEG: tekstparagraaf => nieuw block
+        # Uitleg: tekst => nieuw block (+ images in dezelfde paragraaf)
         if text:
             b = {"text": text, "images": [], "caption": ""}
             if imgs:
-                # images in dezelfde paragraaf naast deze tekst
                 b["images"].extend(imgs)
                 current["_pending_image_block"] = b
             current["blocks"].append(b)
             current["_last_block"] = b
             continue
 
-        # Als hier niets matcht: negeren (lege paragrafen zonder images)
+        # Lege paragraaf zonder images => negeren
         continue
 
-    # Optional: zet eerste image als left_image (zoals in voorbeeld), maar alleen als je dat wil.
-    # Jij wilt vooral “naast elk stukje tekst”. Daarom laten we left leeg.
-    # Wil je wél: pak de eerste image uit eerste block en haal hem uit de block images.
-    # (zet hieronder True om dit te activeren)
-    USE_LEFT_IMAGE = False
-    if USE_LEFT_IMAGE:
-        for step in steps:
-            if step["blocks"]:
-                b0 = step["blocks"][0]
-                if b0.get("images"):
-                    step["left_image_url"] = b0["images"][0]
-                    if b0.get("caption"):
-                        step["left_caption"] = b0["caption"]
-                        b0["caption"] = ""
-                    b0["images"] = b0["images"][1:]
-
-    # Bouw output
-    html_blocks = [_step_table_html(s) for s in steps]
-    return "\n\n".join(html_blocks)
+    return "\n\n".join(_step_table_html(s) for s in steps)
 
