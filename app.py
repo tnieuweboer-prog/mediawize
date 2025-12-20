@@ -1,11 +1,52 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, redirect, url_for, session
 from html_converter import docx_to_html
 from workbook_builder import build_workbook_docx_front_and_steps
 import tempfile
 import os
+import secrets
+from functools import wraps
 
 app = Flask(__name__)
 
+# ------------------------------------------------------------
+# SECRET KEY (zet dit als ENV VAR op je VPS voor productie)
+# export FLASK_SECRET_KEY="..."
+# ------------------------------------------------------------
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
+
+
+# ------------------------------------------------------------
+# AUTH HELPERS (dummy login: docent/leerling kiezen)
+# ------------------------------------------------------------
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get("user"):
+            return redirect(url_for("login", next=request.path))
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+def role_required(role_name: str):
+    @wraps
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if session.get("role") != role_name:
+                return base_message_page(
+                    title="Geen toegang",
+                    message="Je hebt geen rechten voor deze pagina.",
+                    tab="extra",
+                    status_code=403,
+                )
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+# ------------------------------------------------------------
+# UI BASE (sidebar tabs uitgebreid met Extra/Login)
+# ------------------------------------------------------------
 BASE_PAGE = """
 <!DOCTYPE html>
 <html lang="nl">
@@ -116,7 +157,7 @@ label {{
   margin-top:12px;
 }}
 
-input[type="text"], textarea, select {{
+input[type="text"], input[type="password"], textarea, select {{
   width:100%;
   padding:10px 12px;
   border-radius:12px;
@@ -172,6 +213,28 @@ button {{
   padding:8px 14px;
 }}
 
+.badge {{
+  display:inline-block;
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:#e2e8f0;
+  color:#0f172a;
+  margin-left:8px;
+}}
+
+.topline {{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:16px;
+}}
+
+.topline small {{
+  color: var(--muted);
+}}
+
 @media (max-width:900px) {{
   .sidebar {{ display:none; }}
   .code-area textarea {{ height:420px; }}
@@ -194,7 +257,16 @@ button {{
   <nav class="nav">
     <a href="/" class="{tab_html}">💚 DOCX → HTML</a>
     <a href="/workbook" class="{tab_workbook}">📘 Werkboekjes</a>
+    <a href="/extra" class="{tab_extra}">🔒 Extra</a>
+    <a href="/login" class="{tab_login}">{login_label}</a>
   </nav>
+
+  <div style="margin-top:auto; padding-top:14px; border-top:1px solid rgba(255,255,255,0.12);">
+    <div style="font-weight:700;">
+      {user_line}
+    </div>
+    <small style="color:#94a3b8;">{role_line}</small>
+  </div>
 </aside>
 
 <main class="content">
@@ -228,6 +300,47 @@ function addStep() {{
 </html>
 """
 
+
+def render_base(content: str, tab: str):
+    tab_html = "active" if tab == "html" else ""
+    tab_workbook = "active" if tab == "workbook" else ""
+    tab_extra = "active" if tab == "extra" else ""
+    tab_login = "active" if tab == "login" else ""
+
+    if session.get("user"):
+        login_label = "🚪 Uitloggen"
+        user_line = f"Ingelogd"
+        role_line = f"Rol: {session.get('role','-')}"
+    else:
+        login_label = "🔑 Inloggen"
+        user_line = "Niet ingelogd"
+        role_line = "Rol: -"
+
+    return BASE_PAGE.format(
+        tab_html=tab_html,
+        tab_workbook=tab_workbook,
+        tab_extra=tab_extra,
+        tab_login=tab_login,
+        login_label=login_label,
+        user_line=user_line,
+        role_line=role_line,
+        content=content,
+    )
+
+
+def base_message_page(title: str, message: str, tab: str, status_code: int = 200):
+    content = f"""
+    <div class="card">
+      <h1>{title}</h1>
+      <p class="lead">{message}</p>
+    </div>
+    """
+    return render_base(content, tab), status_code
+
+
+# ------------------------------------------------------------
+# PAGES: DOCX → HTML
+# ------------------------------------------------------------
 def html_page(result=None, error=None):
     error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
 
@@ -256,14 +369,16 @@ def html_page(result=None, error=None):
       {result_block}
     </div>
     """
-    return BASE_PAGE.format(tab_html="active", tab_workbook="", content=content)
+    return render_base(content, "html")
 
 
+# ------------------------------------------------------------
+# PAGES: Werkboekjes
+# ------------------------------------------------------------
 def workbook_page(step_count=1, error=None, values=None):
     values = values or {}
     error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
 
-    # stapvelden renderen
     step_blocks = ""
     for i in range(step_count):
         step_blocks += f"""
@@ -342,9 +457,12 @@ def workbook_page(step_count=1, error=None, values=None):
       </form>
     </div>
     """
-    return BASE_PAGE.format(tab_html="", tab_workbook="active", content=content)
+    return render_base(content, "workbook")
 
 
+# ------------------------------------------------------------
+# ROUTES: Existing
+# ------------------------------------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
@@ -376,17 +494,14 @@ def workbook():
     if request.method == "GET":
         return workbook_page(step_count=1)
 
-    # Als je op "Nieuwe stap" klikt, submit hij ook -> dan alleen rerenderen
     step_count = int(request.form.get("stepCount", "1") or "1")
 
-    # Als er geen "titel" is, nemen we aan dat dit een "addStep" refresh is
     if not request.form.get("titel"):
         values = dict(request.form)
         values["include_materiaalstaat"] = bool(request.form.get("include_materiaalstaat"))
         return workbook_page(step_count=step_count, values=values)
 
     try:
-        # Meta
         meta = {
             "vak": request.form.get("vak", "BWI"),
             "opdracht_titel": request.form.get("titel", ""),
@@ -397,15 +512,12 @@ def workbook():
             "materialen": [],
         }
 
-        # Cover image bytes (optioneel)
         cover_file = request.files.get("cover")
         if cover_file and cover_file.filename:
             meta["cover_bytes"] = cover_file.read()
 
-        # Materiaalstaat (nu simpel: later bouwen we dit uit)
         mat_rows = int((request.form.get("mat_rows", "0") or "0").strip() or "0")
         if meta["include_materiaalstaat"] and mat_rows > 0:
-            # voorlopig lege rijen, later echte velden toevoegen
             for _ in range(mat_rows):
                 meta["materialen"].append({
                     "Nummer": "",
@@ -417,7 +529,6 @@ def workbook():
                     "Materiaal": "",
                 })
 
-        # Steps bouwen
         steps = []
         for i in range(step_count):
             title = request.form.get(f"step_title_{i}", "")
@@ -433,7 +544,6 @@ def workbook():
             if img_file and img_file.filename:
                 step["images"].append(img_file.read())
 
-            # voeg toe als er iets in staat
             if step["title"] or step["text_blocks"] or step["images"]:
                 steps.append(step)
 
@@ -453,6 +563,139 @@ def workbook():
         return workbook_page(step_count=step_count, error=f"Fout bij genereren: {e}", values=values)
 
 
+# ------------------------------------------------------------
+# ROUTES: Login / Logout (dummy)
+# - GET /login: form
+# - POST /login: sets session
+# - GET /logout: clears session
+# ------------------------------------------------------------
+def login_page(error: str = None, next_url: str = "/extra"):
+    error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
+    next_safe = next_url or "/extra"
+
+    content = f"""
+    <div class="card">
+      <div class="topline">
+        <div>
+          <h1>Inloggen</h1>
+          <p class="lead">Tijdelijk: kies een rol. Later vervangen door Microsoft (Atlas) login.</p>
+        </div>
+        <div>
+          <span class="badge">dummy login</span>
+        </div>
+      </div>
+
+      {error_block}
+
+      <form method="POST">
+        <input type="hidden" name="next" value="{next_safe}">
+        <label>Rol</label>
+        <select name="role" required>
+          <option value="docent">Docent</option>
+          <option value="leerling">Leerling</option>
+        </select>
+
+        <label>Naam (optioneel)</label>
+        <input type="text" name="name" placeholder="bijv. Tom">
+
+        <button type="submit">Inloggen</button>
+      </form>
+
+      <div class="section">
+        <p class="lead">Tip: als je later Microsoft SSO toevoegt, blijft de rest (extra/dashboard) hetzelfde.</p>
+      </div>
+    </div>
+    """
+    return render_base(content, "login")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # Als je al ingelogd bent -> logout knop laten werken via /login
+    if request.method == "GET" and session.get("user"):
+        return redirect(url_for("logout"))
+
+    if request.method == "GET":
+        return login_page(next_url=request.args.get("next", "/extra"))
+
+    # POST
+    role = (request.form.get("role") or "").strip()
+    name = (request.form.get("name") or "user").strip() or "user"
+    next_url = request.form.get("next") or "/extra"
+
+    if role not in ("docent", "leerling"):
+        return login_page(error="Kies een geldige rol.", next_url=next_url)
+
+    session["user"] = name
+    session["role"] = role
+    return redirect(next_url)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+
+# ------------------------------------------------------------
+# ROUTES: Extra (afgeschermd)
+# ------------------------------------------------------------
+@app.route("/extra", methods=["GET"])
+@login_required
+def extra():
+    role = session.get("role")
+
+    # basic dashboard
+    if role == "docent":
+        content = f"""
+        <div class="card">
+          <h1>Extra – Docent</h1>
+          <p class="lead">Hier komt straks de toets-generator (upload → controle → klaarzetten → submissions).</p>
+
+          <div class="section">
+            <h3>Status</h3>
+            <p class="lead">Ingelogd als <b>{session.get("user","")}</b> (docent).</p>
+            <p class="lead">Volgende stap: een pagina voor “Toetsen” + “Inzendingen”.</p>
+          </div>
+
+          <div class="section">
+            <a href="/logout"><button type="button" class="btn-copy">Uitloggen</button></a>
+          </div>
+        </div>
+        """
+        return render_base(content, "extra")
+
+    if role == "leerling":
+        content = f"""
+        <div class="card">
+          <h1>Extra – Leerling</h1>
+          <p class="lead">Hier komt straks “Toetscode invoeren” → toets maken → verzenden.</p>
+
+          <div class="section">
+            <p class="lead">Ingelogd als <b>{session.get("user","")}</b> (leerling).</p>
+            <p class="lead">Volgende stap: toetscode + startknop.</p>
+          </div>
+
+          <div class="section">
+            <a href="/logout"><button type="button" class="btn-copy">Uitloggen</button></a>
+          </div>
+        </div>
+        """
+        return render_base(content, "extra")
+
+    return base_message_page(
+        title="Rol ontbreekt",
+        message="Je rol is niet gezet. Log opnieuw in.",
+        tab="extra",
+        status_code=400
+    )
+
+
+# ------------------------------------------------------------
+# MAIN
+# ------------------------------------------------------------
 if __name__ == "__main__":
+    # debug True alleen lokaal. Op VPS achter gunicorn: debug=False
     app.run(host="0.0.0.0", port=8501, debug=True)
+
 
