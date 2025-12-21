@@ -430,3 +430,156 @@ button{
   color: var(--muted);
 }
 
+/* =========================================================
+   Public layout (landing/login/signup)
+   ========================================================= */
+
+.pub-header{
+  background: #0f172a;
+  color: #e5e7eb;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.pub-header-inner{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.pub-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width: 180px;
+}
+
+.pub-logo{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  background:#fff;
+  object-fit:contain;
+}
+
+.pub-title{
+  font-weight:900;
+  font-size:16px;
+  line-height:1.1;
+}
+
+.pub-subtitle{
+  font-size:12px;
+  color:#94a3b8;
+}
+
+.pub-nav{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.pub-nav a{
+  color:#e5e7eb;
+  text-decoration:none;
+  font-weight:800;
+  padding:10px 12px;
+  border-radius:14px;
+  background: rgba(255,255,255,0.08);
+}
+
+.pub-nav a.active{
+  background: rgba(34,197,94,0.25);
+}
+
+.pub-main{
+  min-height: calc(100vh - 64px - 54px);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding: 18px 12px;
+}
+
+.pub-container{
+  width:100%;
+  max-width: 1100px;
+}
+
+.pub-footer{
+  background: #0b1220;
+  color:#94a3b8;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.pub-footer-inner{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.pub-footer-dot{ opacity:0.5; }
+
+/* Landing blocks */
+.pub-hero{
+  background:#ffffff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding: 18px;
+}
+
+.pub-hero h1{
+  margin:0 0 8px 0;
+  font-size: 34px;
+  line-height: 1.05;
+}
+
+.pub-hero p{
+  margin:0;
+  color: var(--muted);
+  max-width: 75ch;
+}
+
+.pub-cta{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 14px;
+}
+
+.pub-modules{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 900px){
+  .pub-header-inner{ align-items:flex-start; flex-direction:column; }
+  .pub-nav{ justify-content:flex-start; }
+  .pub-hero h1{ font-size: 28px; }
+  .pub-modules{ grid-template-columns: 1fr; }
+}
+
+.pub-module{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding: 16px;
+}
+
+.pub-module h3{
+  margin:0 0 6px 0;
+  font-size: 16px;
+}
+
+.pub-module p{
+  margin:0;
+  color: var(--muted);
+}
