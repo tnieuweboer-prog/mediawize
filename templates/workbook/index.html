@@ -1,1 +1,86 @@
+{# templates/workbook/index.html #}
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>Werkboekjes-generator</h1>
+  <p class="lead">Templates blijven leidend (BWI/PIE/MVI). We vullen nu cover, materiaalstaat en stappen.</p>
+
+  {% if error %}
+    <p style="color:red;font-weight:700">{{ error }}</p>
+  {% endif %}
+
+  <form id="wbForm" method="POST" enctype="multipart/form-data">
+    <input type="hidden" id="stepCount" name="stepCount" value="{{ step_count }}">
+
+    <label>Vak (template)</label>
+    <select name="vak" required>
+      {% set vak = values.get("vak", "BWI") %}
+      <option value="BWI" {{ "selected" if vak=="BWI" else "" }}>BWI</option>
+      <option value="PIE" {{ "selected" if vak=="PIE" else "" }}>PIE</option>
+      <option value="MVI" {{ "selected" if vak=="MVI" else "" }}>MVI</option>
+    </select>
+
+    <div class="row">
+      <div>
+        <label>Opdracht titel</label>
+        <input type="text" name="titel" required value="{{ values.get('titel','') }}">
+      </div>
+      <div>
+        <label>Profieldeel (optioneel)</label>
+        <input type="text" name="profieldeel" value="{{ values.get('profieldeel','') }}">
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Docent</label>
+        <input type="text" name="docent" value="{{ values.get('docent','') }}">
+      </div>
+      <div>
+        <label>Duur</label>
+        <input type="text" name="duur" value="{{ values.get('duur','10 x 45 minuten') }}">
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Omslag</h3>
+      <label>Cover-afbeelding (optioneel)</label>
+      <input type="file" name="cover" accept=".png,.jpg,.jpeg">
+    </div>
+
+    <div class="section">
+      <h3>Materiaalstaat</h3>
+      <label>
+        <input type="checkbox" name="include_materiaalstaat" {{ "checked" if values.get("include_materiaalstaat") else "" }}>
+        Materiaalstaat toevoegen
+      </label>
+
+      <label>Aantal regels (bijv. 5)</label>
+      <input type="text" name="mat_rows" value="{{ values.get('mat_rows','3') }}">
+      <p class="lead" style="margin-top:8px;">(Later maken we echte velden per regel; nu is dit een snelle basis.)</p>
+    </div>
+
+    {% for i in range(step_count) %}
+      <div class="section">
+        <h3>Stap {{ i+1 }}</h3>
+        <label>Titel</label>
+        <input type="text" name="step_title_{{ i }}" value="{{ values.get('step_title_' ~ i, '') }}">
+
+        <label>Tekst</label>
+        <textarea name="step_text_{{ i }}" rows="4">{{ values.get('step_text_' ~ i, '') }}</textarea>
+
+        <label>Afbeelding (optioneel)</label>
+        <input type="file" name="step_img_{{ i }}" accept=".png,.jpg,.jpeg">
+      </div>
+    {% endfor %}
+
+    <div class="section">
+      <button type="button" class="btn-copy" onclick="addStep()">➕ Nieuwe stap toevoegen</button>
+      <button type="submit">📘 Werkboekje genereren</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
 
