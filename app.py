@@ -72,69 +72,36 @@ def role_required(role_name: str):
 @app.route("/", methods=["GET"])
 def home():
     content = """
-    <div class="card">
-      <div class="landing-hero">
-        <div class="kicker">SG De Triade · Triade Tools</div>
-        <h1>Tools voor lessen, opdrachten en toetsen</h1>
-        <p>
-          Eén plek voor docenten en leerlingen. Docenten zetten lesmateriaal en toetsen klaar.
-          Leerlingen maken online de toets en leveren in. Alles werkt op desktop én mobiel.
-        </p>
+    <div class="pub-hero">
+      <h1>Tools voor lessen, opdrachten en toetsen</h1>
+      <p>
+        Triade Tools helpt docenten bij het omzetten van lesmateriaal (DOCX → HTML),
+        het genereren van werkboekjes en het klaarzetten van toetsen.
+        Leerlingen maken toetsen online en leveren in via de leerlingomgeving.
+      </p>
 
-        <div class="cta-row">
-          <a class="btn-link" href="/login"><button type="button">🔑 Inloggen</button></a>
-          <a class="btn-link" href="/signup"><button type="button" class="btn-ghost">✨ Account maken</button></a>
-        </div>
+      <div class="pub-cta">
+        <a class="btn-link" href="/login"><button type="button">🔑 Inloggen</button></a>
+        <a class="btn-link" href="/signup"><button type="button" class="btn-ghost">✨ Account maken</button></a>
       </div>
+    </div>
 
-      <div class="module-grid">
-        <div class="module-card">
-          <p class="module-title">💚 DOCX → HTML</p>
-          <p class="module-desc">
-            Zet een Word-bestand om naar nette HTML voor Stermonitor. Inclusief kopieer-knop en mobiele weergave.
-          </p>
-        </div>
-
-        <div class="module-card">
-          <p class="module-title">📘 Werkboekjes</p>
-          <p class="module-desc">
-            Maak werkboekjes op basis van de bestaande templates (BWI/PIE/MVI). Cover, materiaalstaat en stappen.
-          </p>
-        </div>
-
-        <div class="module-card">
-          <p class="module-title">📝 Toetsen</p>
-          <p class="module-desc">
-            Docent zet klaar, leerling maakt, docent downloadt. Daarna kan alles met één bevestiging worden verwijderd.
-          </p>
-        </div>
+    <div class="pub-modules">
+      <div class="pub-module">
+        <h3>💚 DOCX → HTML</h3>
+        <p>Word omzetten naar Stermonitor-HTML met kopieerknop en nette opmaak.</p>
       </div>
-
-      <div class="split">
-        <div class="note">
-          <h3>Voor docenten</h3>
-          <p>
-            Inloggen → docent dashboard → modules gebruiken. Je zet toetsen klaar en beheert inzendingen per klas.
-          </p>
-        </div>
-        <div class="note">
-          <h3>Voor leerlingen</h3>
-          <p>
-            Inloggen → leerling dashboard → toetscode invoeren → maken → verzenden.
-            Geen onnodige gegevensopslag.
-          </p>
-        </div>
+      <div class="pub-module">
+        <h3>📘 Werkboekjes</h3>
+        <p>Werkboekjes maken op basis van BWI/PIE/MVI templates, met cover en stappen.</p>
       </div>
-
-      <div class="section">
-        <p class="lead">
-          Account maken en inloggen is nu nog dummy (sessie). Later koppelen we dit aan Microsoft (Atlas) login.
-        </p>
+      <div class="pub-module">
+        <h3>📝 Toetsen</h3>
+        <p>Docent zet klaar, leerling maakt, docent downloadt — daarna opruimen.</p>
       </div>
     </div>
     """
-    return render_page(content, "home")
-
+    return render_public_page(content, "home")
 
 # ------------------------------------------------------------
 # Signup (publiek) - dummy “account maken”
