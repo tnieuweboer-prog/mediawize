@@ -1,1 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>DOCX → HTML</h1>
+  <p class="lead">
+    Upload een Word-bestand (.docx). Daarna kun je de HTML kopiëren naar Stermonitor.
+  </p>
+
+  {% if error %}
+    <p style="color:red;font-weight:700">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".docx" required>
+    <button type="submit">Converteren</button>
+  </form>
+
+  {% if result %}
+    <div class="result-header" style="margin-top:18px;">
+      <h2 style="margin:0;">Gegenereerde HTML</h2>
+      <button type="button" class="btn-copy" onclick="copyHTML()">📋 Kopiëren</button>
+    </div>
+
+    <div class="code-area">
+      <textarea id="htmlResult" readonly>{{ result }}</textarea>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+async function copyHTML() {
+  const el = document.getElementById("htmlResult");
+  if (!el) return;
+  const text = el.value || "";
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    el.select();
+    document.execCommand("copy");
+  }
+}
+</script>
+
+{% endblock %}
 
