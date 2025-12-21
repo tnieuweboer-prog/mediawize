@@ -8,8 +8,6 @@ from functools import wraps
 
 app = Flask(__name__)
 
-# Secret key voor sessions (zet dit als ENV VAR op VPS voor productie)
-# export FLASK_SECRET_KEY="..."
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 
 
@@ -48,8 +46,167 @@ def login_required(fn):
     return wrapper
 
 
+def role_required(role_name: str):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if session.get("role") != role_name:
+                return message_page(
+                    title="Geen toegang",
+                    message="Je hebt geen rechten voor deze pagina.",
+                    tab="home",
+                    status_code=403
+                )
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 # ------------------------------------------------------------
-# PAGES: DOCX → HTML
+# HOME PAGE (publiek)
+# ------------------------------------------------------------
+@app.route("/", methods=["GET"])
+def home():
+    # Call-to-action afhankelijk van login status
+    if session.get("user"):
+        if session.get("role") == "docent":
+            primary_href = "/docent"
+            primary_text = "Ga naar docent dashboard"
+        elif session.get("role") == "leerling":
+            primary_href = "/leerling"
+            primary_text = "Ga naar leerling dashboard"
+        else:
+            primary_href = "/logout"
+            primary_text = "Opnieuw inloggen"
+    else:
+        primary_href = "/login"
+        primary_text = "Inloggen"
+
+    content = f"""
+    <div class="card">
+      <div class="hero">
+        <h1>Triade Tools</h1>
+        <p class="lead">
+          Eén plek voor DOCX → HTML, werkboekjes en (straks) toetsen. Werkt op desktop én mobiel.
+        </p>
+      </div>
+
+      <div class="tile-grid">
+
+        <div class="tile">
+          <p class="tile-title">💚 DOCX → HTML</p>
+          <p class="tile-desc">Upload een Word-bestand en kopieer direct de HTML voor Stermonitor.</p>
+          <div class="tile-actions">
+            <a class="btn-link" href="{primary_href}"><button type="button">{primary_text}</button></a>
+            <a class="btn-link" href="/html"><button type="button" class="btn-secondary">Open tool</button></a>
+          </div>
+        </div>
+
+        <div class="tile">
+          <p class="tile-title">📘 Werkboekjes</p>
+          <p class="tile-desc">Maak een werkboekje op basis van de bestaande templates (BWI/PIE/MVI).</p>
+          <div class="tile-actions">
+            <a class="btn-link" href="{primary_href}"><button type="button">{primary_text}</button></a>
+            <a class="btn-link" href="/workbook"><button type="button" class="btn-secondary">Open tool</button></a>
+          </div>
+        </div>
+
+        <div class="tile">
+          <p class="tile-title">📝 Toetsen</p>
+          <p class="tile-desc">Docent zet klaar, leerling maakt, docent downloadt en bevestigt (dan verwijderen).</p>
+          <div class="tile-actions">
+            <a class="btn-link" href="{primary_href}"><button type="button">{primary_text}</button></a>
+            <a class="btn-link" href="/toetsen"><button type="button" class="btn-secondary">Open module</button></a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="section">
+        <p class="lead">
+          Tip: Log in als docent om alle modules te gebruiken. Leerling krijgt een eigen omgeving voor toets-afname.
+        </p>
+      </div>
+    </div>
+    """
+    return render_page(content, "home")
+
+
+# ------------------------------------------------------------
+# DOCENT / LEERLING DASHBOARDS
+# ------------------------------------------------------------
+@app.route("/docent", methods=["GET"])
+@login_required
+@role_required("docent")
+def docent_dashboard():
+    content = f"""
+    <div class="card">
+      <h1>Docent dashboard</h1>
+      <p class="lead">Kies een module om mee te werken.</p>
+
+      <div class="tile-grid">
+        <div class="tile">
+          <p class="tile-title">💚 DOCX → HTML</p>
+          <p class="tile-desc">Converteren naar Stermonitor HTML.</p>
+          <div class="tile-actions">
+            <a class="btn-link" href="/html"><button type="button">Open</button></a>
+          </div>
+        </div>
+
+        <div class="tile">
+          <p class="tile-title">📘 Werkboekjes</p>
+          <p class="tile-desc">Werkboekjes genereren vanuit templates.</p>
+          <div class="tile-actions">
+            <a class="btn-link" href="/workbook"><button type="button">Open</button></a>
+          </div>
+        </div>
+
+        <div class="tile">
+          <p class="tile-title">📝 Toetsen</p>
+          <p class="tile-desc">Toetsen klaarzetten en inzendingen downloaden.</p>
+          <div class="tile-actions">
+            <a class="btn-link" href="/toetsen"><button type="button">Open</button></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="lead">Ingelogd als <b>{session.get("user","")}</b> (docent).</p>
+      </div>
+    </div>
+    """
+    return render_page(content, "docent")
+
+
+@app.route("/leerling", methods=["GET"])
+@login_required
+@role_required("leerling")
+def leerling_dashboard():
+    content = f"""
+    <div class="card">
+      <h1>Leerling dashboard</h1>
+      <p class="lead">Start een toets met een toetscode.</p>
+
+      <div class="tile-grid">
+        <div class="tile">
+          <p class="tile-title">📝 Toets maken</p>
+          <p class="tile-desc">Voer de toetscode in en start.</p>
+          <div class="tile-actions">
+            <a class="btn-link" href="/toets-maken"><button type="button">Start</button></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="lead">Ingelogd als <b>{session.get("user","")}</b> (leerling).</p>
+      </div>
+    </div>
+    """
+    return render_page(content, "leerling")
+
+
+# ------------------------------------------------------------
+# DOCX → HTML (nu op /html)
 # ------------------------------------------------------------
 def html_page(result=None, error=None):
     error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
@@ -82,8 +239,36 @@ def html_page(result=None, error=None):
     return render_page(content, "html")
 
 
+@app.route("/html", methods=["GET", "POST"])
+@login_required
+@role_required("docent")
+def html_tool():
+    if request.method == "GET":
+        return html_page()
+
+    if "file" not in request.files:
+        return html_page(error="Geen bestand geüpload")
+
+    file = request.files["file"]
+    if not file or file.filename == "":
+        return html_page(error="Geen geldig bestand gekozen")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
+        file.save(tmp.name)
+        path = tmp.name
+
+    try:
+        html = docx_to_html(path)
+        return html_page(result=html)
+    except Exception as e:
+        return html_page(error=f"Fout: {e}")
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
+
+
 # ------------------------------------------------------------
-# PAGES: Werkboekjes
+# Werkboekjes (blijft /workbook)
 # ------------------------------------------------------------
 def workbook_page(step_count=1, error=None, values=None):
     values = values or {}
@@ -170,46 +355,15 @@ def workbook_page(step_count=1, error=None, values=None):
     return render_page(content, "workbook")
 
 
-# ------------------------------------------------------------
-# ROUTES: DOCX → HTML
-# ------------------------------------------------------------
-@app.route("/", methods=["GET", "POST"])
-def index():
-    if request.method == "GET":
-        return html_page()
-
-    if "file" not in request.files:
-        return html_page(error="Geen bestand geüpload")
-
-    file = request.files["file"]
-    if not file or file.filename == "":
-        return html_page(error="Geen geldig bestand gekozen")
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
-        file.save(tmp.name)
-        path = tmp.name
-
-    try:
-        html = docx_to_html(path)
-        return html_page(result=html)
-    except Exception as e:
-        return html_page(error=f"Fout: {e}")
-    finally:
-        if os.path.exists(path):
-            os.remove(path)
-
-
-# ------------------------------------------------------------
-# ROUTES: Werkboekjes
-# ------------------------------------------------------------
 @app.route("/workbook", methods=["GET", "POST"])
+@login_required
+@role_required("docent")
 def workbook():
     if request.method == "GET":
         return workbook_page(step_count=1)
 
     step_count = int(request.form.get("stepCount", "1") or "1")
 
-    # Als je op "Nieuwe stap" klikt (submit zonder titel) -> alleen rerenderen
     if not request.form.get("titel"):
         values = dict(request.form)
         values["include_materiaalstaat"] = bool(request.form.get("include_materiaalstaat"))
@@ -278,23 +432,55 @@ def workbook():
 
 
 # ------------------------------------------------------------
-# ROUTES: Login / Logout (dummy)
+# Toets module placeholders (nu nog simpel)
 # ------------------------------------------------------------
-def login_page(error: str = None, next_url: str = "/extra"):
+@app.route("/toetsen", methods=["GET"])
+@login_required
+@role_required("docent")
+def toetsen_docent():
+    content = """
+    <div class="card">
+      <h1>Toetsen</h1>
+      <p class="lead">Hier bouwen we straks: Nieuwe toets → vragen → toetscode → inzendingen.</p>
+
+      <div class="section">
+        <button type="button" class="btn-secondary" disabled>➕ Nieuwe toets (komt zo)</button>
+      </div>
+    </div>
+    """
+    return render_page(content, "toetsen")
+
+
+@app.route("/toets-maken", methods=["GET"])
+@login_required
+@role_required("leerling")
+def toets_maken_leerling():
+    content = """
+    <div class="card">
+      <h1>Toets maken</h1>
+      <p class="lead">Hier komt straks: toetscode invoeren → start → vragen → verzenden.</p>
+
+      <div class="section">
+        <label>Toetscode</label>
+        <input type="text" placeholder="bijv. TRIADE-7H2-AB12" disabled>
+        <button type="button" disabled>Start</button>
+      </div>
+    </div>
+    """
+    return render_page(content, "toets_maken")
+
+
+# ------------------------------------------------------------
+# Login / Logout (dummy)
+# ------------------------------------------------------------
+def login_page(error: str = None, next_url: str = None):
     error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
-    next_safe = next_url or "/extra"
+    next_safe = next_url or "/"
 
     content = f"""
     <div class="card">
-      <div class="topline">
-        <div>
-          <h1>Inloggen</h1>
-          <p class="lead">Tijdelijk: kies een rol. Later vervangen door Microsoft (Atlas) login.</p>
-        </div>
-        <div>
-          <span class="badge">dummy login</span>
-        </div>
-      </div>
+      <h1>Inloggen</h1>
+      <p class="lead">Tijdelijk: kies een rol. Later vervangen door Microsoft (Atlas) login.</p>
 
       {error_block}
 
@@ -311,10 +497,6 @@ def login_page(error: str = None, next_url: str = "/extra"):
 
         <button type="submit">Inloggen</button>
       </form>
-
-      <div class="section">
-        <p class="lead">Tip: later kun je dit 1-op-1 vervangen door Microsoft SSO.</p>
-      </div>
     </div>
     """
     return render_page(content, "login")
@@ -322,80 +504,38 @@ def login_page(error: str = None, next_url: str = "/extra"):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Als je al ingelogd bent en je gaat naar /login -> logout flow
     if request.method == "GET" and session.get("user"):
-        return redirect(url_for("logout"))
+        # al ingelogd -> stuur naar dashboard
+        if session.get("role") == "docent":
+            return redirect(url_for("docent_dashboard"))
+        if session.get("role") == "leerling":
+            return redirect(url_for("leerling_dashboard"))
+        return redirect(url_for("home"))
 
     if request.method == "GET":
-        return login_page(next_url=request.args.get("next", "/extra"))
+        return login_page(next_url=request.args.get("next", "/"))
 
     role = (request.form.get("role") or "").strip()
     name = (request.form.get("name") or "user").strip() or "user"
-    next_url = request.form.get("next") or "/extra"
+    next_url = request.form.get("next") or "/"
 
     if role not in ("docent", "leerling"):
         return login_page(error="Kies een geldige rol.", next_url=next_url)
 
     session["user"] = name
     session["role"] = role
-    return redirect(next_url)
+
+    # Na login altijd naar dashboard, dat is jouw wens
+    if role == "docent":
+        return redirect(url_for("docent_dashboard"))
+    return redirect(url_for("leerling_dashboard"))
 
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("index"))
+    return redirect(url_for("home"))
 
 
-# ------------------------------------------------------------
-# ROUTES: Extra (afgeschermd)
-# ------------------------------------------------------------
-@app.route("/extra", methods=["GET"])
-@login_required
-def extra():
-    role = session.get("role")
-
-    if role == "docent":
-        content = f"""
-        <div class="card">
-          <h1>Extra – Docent</h1>
-          <p class="lead">Hier komt straks de toets-generator (upload → controle → klaarzetten → inzendingen).</p>
-
-          <div class="section">
-            <h3>Status</h3>
-            <p class="lead">Ingelogd als <b>{session.get("user","")}</b> (docent).</p>
-            <p class="lead">Volgende stap: pagina’s /docent en /leerling bouwen zonder data-opslag van leerlingnamen.</p>
-          </div>
-        </div>
-        """
-        return render_page(content, "extra")
-
-    if role == "leerling":
-        content = f"""
-        <div class="card">
-          <h1>Extra – Leerling</h1>
-          <p class="lead">Hier komt straks “Toetscode invoeren” → toets maken → verzenden.</p>
-
-          <div class="section">
-            <p class="lead">Ingelogd als <b>{session.get("user","")}</b> (leerling).</p>
-            <p class="lead">Volgende stap: toetscode + startknop.</p>
-          </div>
-        </div>
-        """
-        return render_page(content, "extra")
-
-    return message_page(
-        title="Rol ontbreekt",
-        message="Je rol is niet gezet. Log opnieuw in.",
-        tab="extra",
-        status_code=400
-    )
-
-
-# ------------------------------------------------------------
-# MAIN
-# ------------------------------------------------------------
 if __name__ == "__main__":
-    # debug True alleen lokaal. Op VPS achter gunicorn: debug=False
     app.run(host="0.0.0.0", port=8501, debug=True)
-
