@@ -256,4 +256,71 @@ button{
     padding-top: 14px;
   }
 }
+/* ---------- Home / tiles ---------- */
+.hero{
+  margin-bottom: 16px;
+}
+
+.hero h1{
+  font-size: 28px;
+  line-height: 1.1;
+  margin: 0 0 8px 0;
+}
+
+.hero p{
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.tile-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px){
+  .tile-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+.tile{
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tile-title{
+  font-weight: 900;
+  font-size: 16px;
+  margin: 0;
+}
+
+.tile-desc{
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.tile-actions{
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-secondary{
+  background: #1e293b;
+}
+
+.btn-link{
+  display: inline-block;
+  text-decoration: none;
+}
 
