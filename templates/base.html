@@ -14,7 +14,7 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <img src="/static/assets/logo.png" alt="Triade">
+      <img src="/static/assets/logo.png" alt="Triade Tools">
       <div>
         <div class="logo-title">Triade Tools</div>
         <div class="logo-sub">Docent & leerling</div>
@@ -22,29 +22,52 @@
     </div>
 
     <nav class="nav">
+
       {% if current_user.role == "docent" %}
-        <a href="/docent" class="{{ 'active' if active_tab == 'docent' else '' }}">🏠 Dashboard</a>
-        <a href="/html" class="{{ 'active' if active_tab == 'html' else '' }}">💚 DOCX → HTML</a>
-        <a href="/workbook" class="{{ 'active' if active_tab == 'workbook' else '' }}">📘 Werkboekjes</a>
-        <a href="/docent/toetsen" class="{{ 'active' if active_tab == 'toetsen' else '' }}">📝 Toetsen</a>
+        <a href="/docent" class="{{ 'active' if active_tab == 'docent' else '' }}">
+          🏠 Dashboard
+        </a>
+
+        <a href="/html" class="{{ 'active' if active_tab == 'html' else '' }}">
+          💚 DOCX → HTML
+        </a>
+
+        <a href="/workbook" class="{{ 'active' if active_tab == 'workbook' else '' }}">
+          📘 Werkboekjes
+        </a>
+
+        <a href="/docent/toetsen" class="{{ 'active' if active_tab == 'toetsen' else '' }}">
+          📝 Toetsen
+        </a>
       {% endif %}
 
       {% if current_user.role == "leerling" %}
-        <a href="/leerling" class="{{ 'active' if active_tab == 'leerling' else '' }}">🏠 Dashboard</a>
-        <a href="/leerling/toets" class="{{ 'active' if active_tab == 'toets_maken' else '' }}">📝 Toets maken</a>
+        <a href="/leerling" class="{{ 'active' if active_tab == 'leerling' else '' }}">
+          🏠 Dashboard
+        </a>
+
+        <a href="/leerling/toets" class="{{ 'active' if active_tab == 'toets_maken' else '' }}">
+          📝 Toets maken
+        </a>
       {% endif %}
 
       {% if current_user.is_admin %}
         <hr>
-        <a href="/admin">⚙️ Beheer</a>
+        <a href="/admin">
+          ⚙️ Beheer
+        </a>
       {% endif %}
 
       <hr>
-      <a href="/logout">🚪 Uitloggen</a>
+
+      <a href="/logout">
+        🚪 Uitloggen
+      </a>
+
     </nav>
   </aside>
 
-  <!-- CONTENT -->
+  <!-- MAIN CONTENT -->
   <main class="content">
 
     <!-- TOPBAR (mobiel) -->
@@ -61,7 +84,7 @@
 
 <!-- JS -->
 <script>
-function toggleSidebar(){
+function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
 }
 </script>
