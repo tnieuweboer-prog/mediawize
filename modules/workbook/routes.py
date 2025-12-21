@@ -1,41 +1,85 @@
 # modules/workbook/routes.py
 from __future__ import annotations
 
-from flask import Blueprint, render_template, request, send_file
-from werkzeug.datastructures import MultiDict
+from functools import wraps
+from flask import Blueprint, render_template, request, send_file, session, redirect, url_for
 
 from workbook_builder import build_workbook_docx_front_and_steps
 
 bp = Blueprint("workbook", __name__, url_prefix="/workbook")
 
 
-def _to_values(form: MultiDict) -> dict:
-    """
-    Zet request.form om naar een simpele dict die templates kunnen gebruiken.
-    Checkboxen bestaan niet in form als ze uit staan -> die vangen we op.
-    """
-    values = dict(form)
-    values["include_materiaalstaat"] = bool(form.get("include_materiaalstaat"))
+# ------------------------------------------------------------
+# Mini-guards (zelfstandig werkend)
+# Later vervangen door modules/core/permissions.py
+# ------------------------------------------------------------
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get("user"):
+            return redirect(url_for("auth.login_get"))
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+def role_required(role: str):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if session.get("role") != role:
+                return redirect(url_for("auth.login_get"))
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def _values_from_form():
+    values = dict(request.form)
+    values["include_materiaalstaat"] = bool(request.form.get("include_materiaalstaat"))
     return values
 
 
+# ------------------------------------------------------------
+# GET /workbook
+# ------------------------------------------------------------
 @bp.get("/")
-def index_get():
-    # start met 1 stap
-    return render_template("workbook/index.html", step_count=1, values={}, error=None)
+@login_required
+@role_required("docent")
+def workbook_get():
+    return render_template(
+        "workbook/index.html",
+        step_count=1,
+        values={},
+        error=None,
+        active_tab="workbook",
+        page_title="Werkboekjes",
+    )
 
 
+# ------------------------------------------------------------
+# POST /workbook
+# ------------------------------------------------------------
 @bp.post("/")
-def index_post():
+@login_required
+@role_required("docent")
+def workbook_post():
     step_count = int(request.form.get("stepCount", "1") or "1")
-    values = _to_values(request.form)
+    values = _values_from_form()
 
-    # Als gebruiker op "Nieuwe stap toevoegen" klikt, post hij ook.
-    # We herkennen dat door het ontbreken van titel (zelfde als jouw oude logica).
+    # "Nieuwe stap toevoegen" submit ook het form.
+    # Net als je oude logica: als titel ontbreekt, rerender.
     if not request.form.get("titel"):
-        return render_template("workbook/index.html", step_count=step_count, values=values, error=None)
+        return render_template(
+            "workbook/index.html",
+            step_count=step_count,
+            values=values,
+            error=None,
+            active_tab="workbook",
+            page_title="Werkboekjes",
+        )
 
     try:
+        # Meta
         meta = {
             "vak": request.form.get("vak", "BWI"),
             "opdracht_titel": request.form.get("titel", ""),
@@ -51,7 +95,7 @@ def index_post():
         if cover_file and cover_file.filename:
             meta["cover_bytes"] = cover_file.read()
 
-        # Materiaalstaat (nu simpel: later echte velden per regel)
+        # Materiaalstaat (nu simpel placeholders)
         mat_rows = int((request.form.get("mat_rows", "0") or "0").strip() or "0")
         if meta["include_materiaalstaat"] and mat_rows > 0:
             for _ in range(mat_rows):
@@ -81,6 +125,7 @@ def index_post():
             if img_file and img_file.filename:
                 step["images"].append(img_file.read())
 
+            # voeg toe als er iets in staat
             if step["title"] or step["text_blocks"] or step["images"]:
                 steps.append(step)
 
@@ -100,5 +145,6 @@ def index_post():
             step_count=step_count,
             values=values,
             error=f"Fout bij genereren: {e}",
+            active_tab="workbook",
+            page_title="Werkboekjes",
         )
-
