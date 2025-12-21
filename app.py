@@ -2,7 +2,7 @@
 from flask import Flask
 import os
 
-from modules.core.auth import bp as auth_bp
+from modules.core.auth import auth_bp
 from modules.core.layout import inject_globals
 from modules.workbook.routes import bp as workbook_bp
 from modules.html_tool.routes import bp as html_bp
