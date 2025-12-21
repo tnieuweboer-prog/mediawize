@@ -1,1 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>Toets maken</h1>
+  <p class="lead">
+    Vul de toetscode in die je van je docent hebt gekregen. Daarna start de toets.
+  </p>
+
+  <form method="POST" action="/leerling/toets/start">
+    <label>Toetscode</label>
+    <input type="text" name="code" placeholder="Bijv. TRI-4821" required>
+
+    <div class="section">
+      <button type="submit">Start toets</button>
+    </div>
+  </form>
+</div>
+
+<div class="card" style="margin-top:14px;">
+  <h2>Let op</h2>
+  <p class="lead" style="margin-bottom:0;">
+    Je antwoorden worden pas verstuurd als je op verzenden drukt. Als je klaar bent, controleer je alles nog één keer.
+  </p>
+</div>
+
+{% endblock %}
 
