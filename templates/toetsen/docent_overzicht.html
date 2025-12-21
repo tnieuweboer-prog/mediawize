@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>Toetsen</h1>
+  <p class="lead">
+    Hier beheer je je toetsen. Je kunt nieuwe toetsen aanmaken en bestaande toetsen bekijken.
+  </p>
+
+  <div class="section">
+    <a href="#" class="btn-link">
+      <button type="button">➕ Nieuwe toets aanmaken</button>
+    </a>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px;">
+  <h2>Bestaande toetsen</h2>
+
+  <p class="lead">
+    Er zijn nog geen toetsen aangemaakt.
+  </p>
+
+  <!--
+  Later komt hier:
+  - tabel met toetsen
+  - status (open / gesloten)
+  - knop: download resultaten
+  - knop: verwijderen
+  -->
+</div>
+
+<div class="card" style="margin-top:14px;">
+  <h2>Werkwijze</h2>
+  <ul style="margin:0; padding-left:18px;">
+    <li>Maak een toets aan als docent</li>
+    <li>Deel de toetscode met je leerlingen</li>
+    <li>Leerlingen maken de toets online</li>
+    <li>Download de resultaten en bevestig ontvangst</li>
+    <li>Na bevestiging worden inzendingen verwijderd</li>
+  </ul>
+</div>
+
+{% endblock %}
