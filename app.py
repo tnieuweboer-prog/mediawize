@@ -1,4 +1,6 @@
-from flask import Flask, request, send_file, redirect, url_for, session, render_template_string
+from flask import (
+    Flask, request, send_file, redirect, url_for, session, render_template_string
+)
 from html_converter import docx_to_html
 from workbook_builder import build_workbook_docx_front_and_steps
 import tempfile
@@ -8,11 +10,13 @@ from functools import wraps
 
 app = Flask(__name__)
 
+# Secret key voor sessions (zet dit als ENV VAR op VPS voor productie)
+# export FLASK_SECRET_KEY="..."
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 
 
 # ------------------------------------------------------------
-# Helpers: render binnen base.html
+# Render helper: content strings in templates/base.html
 # ------------------------------------------------------------
 def render_page(inner_html: str, active_tab: str):
     tpl = """
@@ -35,7 +39,7 @@ def message_page(title: str, message: str, tab: str, status_code: int = 200):
 
 
 # ------------------------------------------------------------
-# AUTH HELPERS (dummy login: docent/leerling kiezen)
+# Auth helpers (dummy login / signup)
 # ------------------------------------------------------------
 def login_required(fn):
     @wraps(fn)
@@ -63,68 +67,68 @@ def role_required(role_name: str):
 
 
 # ------------------------------------------------------------
-# HOME PAGE (publiek)
+# Landing page (publiek)
 # ------------------------------------------------------------
 @app.route("/", methods=["GET"])
 def home():
-    # Call-to-action afhankelijk van login status
-    if session.get("user"):
-        if session.get("role") == "docent":
-            primary_href = "/docent"
-            primary_text = "Ga naar docent dashboard"
-        elif session.get("role") == "leerling":
-            primary_href = "/leerling"
-            primary_text = "Ga naar leerling dashboard"
-        else:
-            primary_href = "/logout"
-            primary_text = "Opnieuw inloggen"
-    else:
-        primary_href = "/login"
-        primary_text = "Inloggen"
-
-    content = f"""
+    content = """
     <div class="card">
-      <div class="hero">
-        <h1>Triade Tools</h1>
-        <p class="lead">
-          Eén plek voor DOCX → HTML, werkboekjes en (straks) toetsen. Werkt op desktop én mobiel.
+      <div class="landing-hero">
+        <div class="kicker">SG De Triade · Triade Tools</div>
+        <h1>Tools voor lessen, opdrachten en toetsen</h1>
+        <p>
+          Eén plek voor docenten en leerlingen. Docenten zetten lesmateriaal en toetsen klaar.
+          Leerlingen maken online de toets en leveren in. Alles werkt op desktop én mobiel.
         </p>
+
+        <div class="cta-row">
+          <a class="btn-link" href="/login"><button type="button">🔑 Inloggen</button></a>
+          <a class="btn-link" href="/signup"><button type="button" class="btn-ghost">✨ Account maken</button></a>
+        </div>
       </div>
 
-      <div class="tile-grid">
-
-        <div class="tile">
-          <p class="tile-title">💚 DOCX → HTML</p>
-          <p class="tile-desc">Upload een Word-bestand en kopieer direct de HTML voor Stermonitor.</p>
-          <div class="tile-actions">
-            <a class="btn-link" href="{primary_href}"><button type="button">{primary_text}</button></a>
-            <a class="btn-link" href="/html"><button type="button" class="btn-secondary">Open tool</button></a>
-          </div>
+      <div class="module-grid">
+        <div class="module-card">
+          <p class="module-title">💚 DOCX → HTML</p>
+          <p class="module-desc">
+            Zet een Word-bestand om naar nette HTML voor Stermonitor. Inclusief kopieer-knop en mobiele weergave.
+          </p>
         </div>
 
-        <div class="tile">
-          <p class="tile-title">📘 Werkboekjes</p>
-          <p class="tile-desc">Maak een werkboekje op basis van de bestaande templates (BWI/PIE/MVI).</p>
-          <div class="tile-actions">
-            <a class="btn-link" href="{primary_href}"><button type="button">{primary_text}</button></a>
-            <a class="btn-link" href="/workbook"><button type="button" class="btn-secondary">Open tool</button></a>
-          </div>
+        <div class="module-card">
+          <p class="module-title">📘 Werkboekjes</p>
+          <p class="module-desc">
+            Maak werkboekjes op basis van de bestaande templates (BWI/PIE/MVI). Cover, materiaalstaat en stappen.
+          </p>
         </div>
 
-        <div class="tile">
-          <p class="tile-title">📝 Toetsen</p>
-          <p class="tile-desc">Docent zet klaar, leerling maakt, docent downloadt en bevestigt (dan verwijderen).</p>
-          <div class="tile-actions">
-            <a class="btn-link" href="{primary_href}"><button type="button">{primary_text}</button></a>
-            <a class="btn-link" href="/toetsen"><button type="button" class="btn-secondary">Open module</button></a>
-          </div>
+        <div class="module-card">
+          <p class="module-title">📝 Toetsen</p>
+          <p class="module-desc">
+            Docent zet klaar, leerling maakt, docent downloadt. Daarna kan alles met één bevestiging worden verwijderd.
+          </p>
         </div>
+      </div>
 
+      <div class="split">
+        <div class="note">
+          <h3>Voor docenten</h3>
+          <p>
+            Inloggen → docent dashboard → modules gebruiken. Je zet toetsen klaar en beheert inzendingen per klas.
+          </p>
+        </div>
+        <div class="note">
+          <h3>Voor leerlingen</h3>
+          <p>
+            Inloggen → leerling dashboard → toetscode invoeren → maken → verzenden.
+            Geen onnodige gegevensopslag.
+          </p>
+        </div>
       </div>
 
       <div class="section">
         <p class="lead">
-          Tip: Log in als docent om alle modules te gebruiken. Leerling krijgt een eigen omgeving voor toets-afname.
+          Account maken en inloggen is nu nog dummy (sessie). Later koppelen we dit aan Microsoft (Atlas) login.
         </p>
       </div>
     </div>
@@ -133,7 +137,132 @@ def home():
 
 
 # ------------------------------------------------------------
-# DOCENT / LEERLING DASHBOARDS
+# Signup (publiek) - dummy “account maken”
+# ------------------------------------------------------------
+def signup_page(error: str = None):
+    error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
+    content = f"""
+    <div class="card">
+      <h1>Account maken</h1>
+      <p class="lead">Tijdelijk: maak een account aan door rol + naam te kiezen. Later Microsoft (Atlas) login.</p>
+      {error_block}
+
+      <form method="POST">
+        <label>Ik ben</label>
+        <select name="role" required>
+          <option value="docent">Docent</option>
+          <option value="leerling">Leerling</option>
+        </select>
+
+        <label>Naam</label>
+        <input type="text" name="name" placeholder="bijv. Tom of Emy" required>
+
+        <button type="submit">Account maken</button>
+      </form>
+
+      <div class="section">
+        <p class="lead">Heb je al een account? <a href="/login">Inloggen</a></p>
+      </div>
+    </div>
+    """
+    return render_page(content, "signup")
+
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "GET":
+        return signup_page()
+
+    role = (request.form.get("role") or "").strip()
+    name = (request.form.get("name") or "").strip()
+
+    if role not in ("docent", "leerling"):
+        return signup_page("Kies een geldige rol.")
+    if not name:
+        return signup_page("Vul je naam in.")
+
+    # Dummy: “account” = sessie
+    session["user"] = name
+    session["role"] = role
+
+    # Na signup direct naar juiste dashboard
+    if role == "docent":
+        return redirect(url_for("docent_dashboard"))
+    return redirect(url_for("leerling_dashboard"))
+
+
+# ------------------------------------------------------------
+# Login / Logout (publiek) - dummy
+# ------------------------------------------------------------
+def login_page(error: str = None, next_url: str = None):
+    error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
+    next_safe = next_url or "/"
+
+    content = f"""
+    <div class="card">
+      <h1>Inloggen</h1>
+      <p class="lead">Tijdelijk: kies een rol. Later vervangen door Microsoft (Atlas) login.</p>
+      {error_block}
+
+      <form method="POST">
+        <input type="hidden" name="next" value="{next_safe}">
+
+        <label>Rol</label>
+        <select name="role" required>
+          <option value="docent">Docent</option>
+          <option value="leerling">Leerling</option>
+        </select>
+
+        <label>Naam (optioneel)</label>
+        <input type="text" name="name" placeholder="bijv. Tom of Emy">
+
+        <button type="submit">Inloggen</button>
+      </form>
+
+      <div class="section">
+        <p class="lead">Nog geen account? <a href="/signup">Account maken</a></p>
+      </div>
+    </div>
+    """
+    return render_page(content, "login")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # Als je al ingelogd bent en je gaat naar /login: stuur naar dashboard
+    if request.method == "GET" and session.get("user"):
+        if session.get("role") == "docent":
+            return redirect(url_for("docent_dashboard"))
+        if session.get("role") == "leerling":
+            return redirect(url_for("leerling_dashboard"))
+        return redirect(url_for("home"))
+
+    if request.method == "GET":
+        return login_page(next_url=request.args.get("next", "/"))
+
+    role = (request.form.get("role") or "").strip()
+    name = (request.form.get("name") or "user").strip() or "user"
+
+    if role not in ("docent", "leerling"):
+        return login_page(error="Kies een geldige rol.", next_url=request.form.get("next", "/"))
+
+    session["user"] = name
+    session["role"] = role
+
+    # Na login altijd naar dashboard (zoals jij wilt)
+    if role == "docent":
+        return redirect(url_for("docent_dashboard"))
+    return redirect(url_for("leerling_dashboard"))
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
+
+
+# ------------------------------------------------------------
+# Dashboards
 # ------------------------------------------------------------
 @app.route("/docent", methods=["GET"])
 @login_required
@@ -144,28 +273,28 @@ def docent_dashboard():
       <h1>Docent dashboard</h1>
       <p class="lead">Kies een module om mee te werken.</p>
 
-      <div class="tile-grid">
-        <div class="tile">
-          <p class="tile-title">💚 DOCX → HTML</p>
-          <p class="tile-desc">Converteren naar Stermonitor HTML.</p>
-          <div class="tile-actions">
-            <a class="btn-link" href="/html"><button type="button">Open</button></a>
+      <div class="module-grid">
+        <div class="module-card">
+          <p class="module-title">💚 DOCX → HTML</p>
+          <p class="module-desc">Converteren naar Stermonitor HTML.</p>
+          <div class="cta-row">
+            <a class="btn-link" href="/html"><button type="button">Open module</button></a>
           </div>
         </div>
 
-        <div class="tile">
-          <p class="tile-title">📘 Werkboekjes</p>
-          <p class="tile-desc">Werkboekjes genereren vanuit templates.</p>
-          <div class="tile-actions">
-            <a class="btn-link" href="/workbook"><button type="button">Open</button></a>
+        <div class="module-card">
+          <p class="module-title">📘 Werkboekjes</p>
+          <p class="module-desc">Werkboekjes genereren vanuit templates.</p>
+          <div class="cta-row">
+            <a class="btn-link" href="/workbook"><button type="button">Open module</button></a>
           </div>
         </div>
 
-        <div class="tile">
-          <p class="tile-title">📝 Toetsen</p>
-          <p class="tile-desc">Toetsen klaarzetten en inzendingen downloaden.</p>
-          <div class="tile-actions">
-            <a class="btn-link" href="/toetsen"><button type="button">Open</button></a>
+        <div class="module-card">
+          <p class="module-title">📝 Toetsen</p>
+          <p class="module-desc">Toetsen klaarzetten en inzendingen beheren.</p>
+          <div class="cta-row">
+            <a class="btn-link" href="/toetsen"><button type="button">Open module</button></a>
           </div>
         </div>
       </div>
@@ -187,11 +316,11 @@ def leerling_dashboard():
       <h1>Leerling dashboard</h1>
       <p class="lead">Start een toets met een toetscode.</p>
 
-      <div class="tile-grid">
-        <div class="tile">
-          <p class="tile-title">📝 Toets maken</p>
-          <p class="tile-desc">Voer de toetscode in en start.</p>
-          <div class="tile-actions">
+      <div class="module-grid">
+        <div class="module-card">
+          <p class="module-title">📝 Toets maken</p>
+          <p class="module-desc">Voer de toetscode in en start.</p>
+          <div class="cta-row">
             <a class="btn-link" href="/toets-maken"><button type="button">Start</button></a>
           </div>
         </div>
@@ -206,7 +335,7 @@ def leerling_dashboard():
 
 
 # ------------------------------------------------------------
-# DOCX → HTML (nu op /html)
+# DOCX → HTML module (docent-only)
 # ------------------------------------------------------------
 def html_page(result=None, error=None):
     error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
@@ -268,7 +397,7 @@ def html_tool():
 
 
 # ------------------------------------------------------------
-# Werkboekjes (blijft /workbook)
+# Werkboekjes module (docent-only)
 # ------------------------------------------------------------
 def workbook_page(step_count=1, error=None, values=None):
     values = values or {}
@@ -432,7 +561,7 @@ def workbook():
 
 
 # ------------------------------------------------------------
-# Toets module placeholders (nu nog simpel)
+# Toets module (placeholder)
 # ------------------------------------------------------------
 @app.route("/toetsen", methods=["GET"])
 @login_required
@@ -471,71 +600,8 @@ def toets_maken_leerling():
 
 
 # ------------------------------------------------------------
-# Login / Logout (dummy)
+# Main
 # ------------------------------------------------------------
-def login_page(error: str = None, next_url: str = None):
-    error_block = f"<p style='color:red;font-weight:700'>{error}</p>" if error else ""
-    next_safe = next_url or "/"
-
-    content = f"""
-    <div class="card">
-      <h1>Inloggen</h1>
-      <p class="lead">Tijdelijk: kies een rol. Later vervangen door Microsoft (Atlas) login.</p>
-
-      {error_block}
-
-      <form method="POST">
-        <input type="hidden" name="next" value="{next_safe}">
-        <label>Rol</label>
-        <select name="role" required>
-          <option value="docent">Docent</option>
-          <option value="leerling">Leerling</option>
-        </select>
-
-        <label>Naam (optioneel)</label>
-        <input type="text" name="name" placeholder="bijv. Tom">
-
-        <button type="submit">Inloggen</button>
-      </form>
-    </div>
-    """
-    return render_page(content, "login")
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "GET" and session.get("user"):
-        # al ingelogd -> stuur naar dashboard
-        if session.get("role") == "docent":
-            return redirect(url_for("docent_dashboard"))
-        if session.get("role") == "leerling":
-            return redirect(url_for("leerling_dashboard"))
-        return redirect(url_for("home"))
-
-    if request.method == "GET":
-        return login_page(next_url=request.args.get("next", "/"))
-
-    role = (request.form.get("role") or "").strip()
-    name = (request.form.get("name") or "user").strip() or "user"
-    next_url = request.form.get("next") or "/"
-
-    if role not in ("docent", "leerling"):
-        return login_page(error="Kies een geldige rol.", next_url=next_url)
-
-    session["user"] = name
-    session["role"] = role
-
-    # Na login altijd naar dashboard, dat is jouw wens
-    if role == "docent":
-        return redirect(url_for("docent_dashboard"))
-    return redirect(url_for("leerling_dashboard"))
-
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("home"))
-
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8501, debug=True)
+
