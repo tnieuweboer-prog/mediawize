@@ -6,37 +6,71 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 auth_bp = Blueprint("auth", __name__)
 
 
+# ------------------------------------------------------------
+# Login
+# ------------------------------------------------------------
 @auth_bp.get("/login")
 def login_get():
-    # Als je al ingelogd bent, stuur door
+    """
+    Toon loginpagina.
+    Als gebruiker al ingelogd is, direct doorsturen naar dashboard.
+    """
     role = session.get("role")
+
     if role == "docent":
         return redirect(url_for("docent.dashboard"))
     if role == "leerling":
         return redirect(url_for("leerling.dashboard"))
-    return render_template("auth/login.html", active_tab="login", error=None)
+
+    return render_template(
+        "auth/login.html",
+        active_tab="login",
+        error=None,
+    )
 
 
 @auth_bp.post("/login")
 def login_post():
+    """
+    Dummy login:
+    - docent / leerling
+    - naam opslaan in session
+    """
     role = (request.form.get("role") or "").strip()
-    name = (request.form.get("name") or "").strip() or "user"
+    name = (request.form.get("name") or "").strip()
 
     if role not in ("docent", "leerling"):
-        return render_template("auth/login.html", active_tab="login", error="Kies docent of leerling.")
+        return render_template(
+            "auth/login.html",
+            active_tab="login",
+            error="Kies docent of leerling.",
+        )
 
-    # Dummy sessie login
+    if not name:
+        return render_template(
+            "auth/login.html",
+            active_tab="login",
+            error="Vul je naam in.",
+        )
+
+    # Session opslaan
+    session.clear()
     session["user"] = name
     session["role"] = role
-    session.setdefault("is_admin", False)
+    session["is_admin"] = False  # later via admin module
 
     if role == "docent":
         return redirect(url_for("docent.dashboard"))
+
     return redirect(url_for("leerling.dashboard"))
 
 
+# ------------------------------------------------------------
+# Logout
+# ------------------------------------------------------------
 @auth_bp.get("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("public.home"))
+    return redirect(url_for("auth.login_get"))
+
 
