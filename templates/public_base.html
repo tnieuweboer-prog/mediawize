@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Triade Tools</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+<header class="pub-header">
+  <div class="pub-header-inner">
+    <div class="pub-brand">
+      <img class="pub-logo" src="/static/assets/logo.png" alt="De Triade">
+      <div>
+        <div class="pub-title">Triade Tools</div>
+        <div class="pub-subtitle">DOCX · Werkboekjes · Toetsen</div>
+      </div>
+    </div>
+
+    <nav class="pub-nav">
+      <a href="/" class="{{ 'active' if active_tab == 'home' else '' }}">Home</a>
+      <a href="/login" class="{{ 'active' if active_tab == 'login' else '' }}">Inloggen</a>
+      <a href="/signup" class="{{ 'active' if active_tab == 'signup' else '' }}">Account maken</a>
+    </nav>
+  </div>
+</header>
+
+<main class="pub-main">
+  <div class="pub-container">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer class="pub-footer">
+  <div class="pub-footer-inner">
+    <span>© {{ (config.SITE_NAME if config and config.SITE_NAME else 'Triade Tools') }}</span>
+    <span class="pub-footer-dot">•</span>
+    <span>SG De Triade</span>
+  </div>
+</footer>
+
+</body>
+</html>
