@@ -3,99 +3,66 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Triade Tools</title>
+  <title>{{ page_title or "Triade Tools" }}</title>
   <link rel="stylesheet" href="/static/css/app.css">
 </head>
 
 <body>
+
 <div class="app">
 
-  <!-- Mobile topbar -->
-  <header class="topbar">
-    <button class="icon-btn" type="button" onclick="toggleSidebar()" aria-label="Menu">☰</button>
-    <div class="topbar-title">Triade Tools</div>
-    <div class="topbar-right">
-      {% if session.get('user') %}
-        <a class="topbar-link" href="/logout">Uitloggen</a>
-      {% else %}
-        <a class="topbar-link" href="/login">Inloggen</a>
-      {% endif %}
-    </div>
-  </header>
-
-  <!-- Overlay for mobile sidebar -->
-  <div id="overlay" class="overlay" onclick="closeSidebar()"></div>
-
-  <aside id="sidebar" class="sidebar">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <img src="/static/assets/logo.png" alt="Logo">
+      <img src="/static/assets/logo.png" alt="Triade">
       <div>
         <div class="logo-title">Triade Tools</div>
-        <div class="logo-sub">DOCX & Werkboekjes</div>
+        <div class="logo-sub">Docent & leerling</div>
       </div>
     </div>
 
     <nav class="nav">
-      <a href="/" class="{{ 'active' if active_tab == 'home' else '' }}">🏠 Home</a>
-    
-      {% if session.get('user') %}
-        {% if session.get('role') == 'docent' %}
-          <a href="/docent" class="{{ 'active' if active_tab == 'docent' else '' }}">👨‍🏫 Dashboard</a>
-          <a href="/html" class="{{ 'active' if active_tab == 'html' else '' }}">💚 DOCX → HTML</a>
-          <a href="/workbook" class="{{ 'active' if active_tab == 'workbook' else '' }}">📘 Werkboekjes</a>
-          <a href="/toetsen" class="{{ 'active' if active_tab == 'toetsen' else '' }}">📝 Toetsen</a>
-        {% elif session.get('role') == 'leerling' %}
-          <a href="/leerling" class="{{ 'active' if active_tab == 'leerling' else '' }}">🧑‍🎓 Dashboard</a>
-          <a href="/toets-maken" class="{{ 'active' if active_tab == 'toets_maken' else '' }}">📝 Toets maken</a>
-        {% endif %}
-        <a href="/logout">🚪 Uitloggen</a>
-      {% else %}
-        <a href="/login" class="{{ 'active' if active_tab == 'login' else '' }}">🔑 Inloggen</a>
-        <a href="/signup" class="{{ 'active' if active_tab == 'signup' else '' }}">✨ Account maken</a>
+      {% if current_user.role == "docent" %}
+        <a href="/docent" class="{{ 'active' if active_tab == 'docent' else '' }}">🏠 Dashboard</a>
+        <a href="/html" class="{{ 'active' if active_tab == 'html' else '' }}">💚 DOCX → HTML</a>
+        <a href="/workbook" class="{{ 'active' if active_tab == 'workbook' else '' }}">📘 Werkboekjes</a>
+        <a href="/docent/toetsen" class="{{ 'active' if active_tab == 'toetsen' else '' }}">📝 Toetsen</a>
       {% endif %}
-    </nav>
 
-    <div class="sidebar-footer">
-      <div class="sidebar-footer-title">
-        {% if session.get('user') %} Ingelogd {% else %} Niet ingelogd {% endif %}
-      </div>
-      <div class="sidebar-footer-sub">Rol: {{ session.get('role', '-') }}</div>
-    </div>
+      {% if current_user.role == "leerling" %}
+        <a href="/leerling" class="{{ 'active' if active_tab == 'leerling' else '' }}">🏠 Dashboard</a>
+        <a href="/leerling/toets" class="{{ 'active' if active_tab == 'toets_maken' else '' }}">📝 Toets maken</a>
+      {% endif %}
+
+      {% if current_user.is_admin %}
+        <hr>
+        <a href="/admin">⚙️ Beheer</a>
+      {% endif %}
+
+      <hr>
+      <a href="/logout">🚪 Uitloggen</a>
+    </nav>
   </aside>
 
+  <!-- CONTENT -->
   <main class="content">
+
+    <!-- TOPBAR (mobiel) -->
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title">{{ page_title or "Triade Tools" }}</div>
+    </div>
+
     {% block content %}{% endblock %}
+
   </main>
 
 </div>
 
+<!-- JS -->
 <script>
-function toggleSidebar() {
-  document.body.classList.toggle("sidebar-open");
-}
-function closeSidebar() {
-  document.body.classList.remove("sidebar-open");
-}
-
-// Copy knop (HTML converter)
-async function copyHTML() {
-  const el = document.getElementById("htmlResult");
-  if (!el) return;
-  const text = el.value;
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    el.select();
-    document.execCommand("copy");
-  }
-}
-
-// Werkboek: nieuwe stap
-function addStep() {
-  const form = document.getElementById("wbForm");
-  const stepCount = parseInt(document.getElementById("stepCount").value || "0", 10);
-  document.getElementById("stepCount").value = String(stepCount + 1);
-  form.submit();
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("open");
 }
 </script>
 
