@@ -1,31 +1,50 @@
 {% extends "public_base.html" %}
 {% block content %}
-<div class="card">
-  <h1>Account aanmaken</h1>
-  <p class="lead">Maak een account aan om de modules te gebruiken.</p>
 
-  {% if error %}
-    <p style="color:#b91c1c;font-weight:700">{{ error }}</p>
-  {% endif %}
+<div class="card" style="max-width:520px; margin:0 auto;">
+  <h1 style="margin:0 0 10px 0;">Account maken</h1>
 
-  <form method="POST" class="form">
-    <label>E-mail</label>
-    <input type="email" name="email" required>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="display:grid; gap:8px; margin:12px 0;">
+        {% for cat, msg in messages %}
+          <div class="section" style="border-left:6px solid #22c55e;">
+            <strong>{{ msg }}</strong>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-    <label>Wachtwoord</label>
-    <input type="password" name="password" required minlength="8">
+  <form method="post" action="{{ url_for('auth.signup_post') }}" style="display:grid; gap:10px; margin-top:12px;">
+    <label>
+      E-mail
+      <input name="email" type="email" required style="width:100%; padding:10px; margin-top:6px;">
+    </label>
 
-    <label>Ik ben</label>
-    <select name="role">
-      <option value="docent" selected>Docent</option>
-      <option value="leerling">Leerling</option>
-    </select>
+    <label>
+      Wachtwoord
+      <input name="password" type="password" required minlength="6" style="width:100%; padding:10px; margin-top:6px;">
+    </label>
 
-    <button type="submit">Account aanmaken</button>
+    <label>
+      Rol
+      <select name="role" style="width:100%; padding:10px; margin-top:6px;">
+        <option value="leerling" selected>Leerling</option>
+        <option value="docent">Docent</option>
+      </select>
+    </label>
+
+    <button type="submit" style="margin-top:8px; background:#22c55e; color:white; border:0; padding:12px 16px; border-radius:10px; font-weight:800;">
+      Account maken
+    </button>
   </form>
 
   <p style="margin-top:14px;">
-    Heb je al een account? <a href="/login">Inloggen</a>
+    Heb je al een account?
+    <a href="{{ url_for('auth.login') }}">Inloggen</a>
   </p>
 </div>
+
 {% endblock %}
+
