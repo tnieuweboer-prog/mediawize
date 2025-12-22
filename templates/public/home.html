@@ -1,323 +1,257 @@
 {% extends "public_base.html" %}
 {% block content %}
 
-<!-- HERO -->
-<section class="hero-wrap">
-  <div class="container hero">
-    <div class="hero-left">
-      <div class="brand">
-        <img
-          src="{{ url_for('static', filename='assets/mediawize-logo.webp') }}"
-          alt="Mediawize"
-          class="brand-logo"
-        />
-      </div>
+<section class="hero">
+  <div class="hero-left">
+    <h1 class="h1">
+      Mediawize
+      <span class="sub">tools voor techniekonderwijs</span>
+    </h1>
 
-      <h1 class="h1">
-        Mediawize
-        <span class="sub">tools voor techniekonderwijs</span>
-      </h1>
+    <p class="lead">
+      Maak snel en netjes lesmateriaal. Zet DOCX om naar HTML, genereer werkboekjes
+      en beheer digitale toetsen voor leerlingen in één omgeving.
+    </p>
 
-      <p class="lead">
-        Maak snel en netjes lesmateriaal. Zet DOCX om naar HTML, genereer werkboekjes
-        en beheer digitale toetsen voor leerlingen in één omgeving.
-      </p>
+    <p class="sublead">
+      Minder knip-en-plak, meer tijd voor je les. Alles overzichtelijk, veilig en klaar voor gebruik.
+    </p>
 
-      <p class="sublead">
-        Minder knip-en-plak, meer tijd voor je les. Alles overzichtelijk, veilig en klaar voor gebruik.
-      </p>
+    <div class="cta">
+      <a class="btn primary" href="{{ url_for('auth.login') }}">Inloggen</a>
+      <a class="btn ghost" href="#modules">Bekijk modules</a>
+      <a class="btn outline" href="{{ url_for('auth.signup') }}">Account maken</a>
+    </div>
 
-      <div class="cta">
-        <a class="btn primary" href="{{ url_for('auth.login') }}">Inloggen</a>
-        <a class="btn ghost" href="#modules">Bekijk modules</a>
-        <a class="btn outline" href="{{ url_for('auth.signup') }}">Account maken</a>
-      </div>
-
-      <div class="trust">
-        <div class="trust-item">
-          <img class="trust-ico" src="{{ url_for('static', filename='assets/icon-shield.webp') }}" alt="">
-          <div>
-            <div class="trust-title">Veilig</div>
-            <div class="trust-text">Leerlingen werken in hun eigen omgeving. Docenten houden overzicht.</div>
-          </div>
-        </div>
-        <div class="trust-item">
-          <img class="trust-ico" src="{{ url_for('static', filename='assets/icon-bolt.webp') }}" alt="">
-          <div>
-            <div class="trust-title">Snel</div>
-            <div class="trust-text">Van Word naar bruikbare output in minuten, inclusief structuur.</div>
-          </div>
-        </div>
-        <div class="trust-item">
-          <img class="trust-ico" src="{{ url_for('static', filename='assets/icon-layout.webp') }}" alt="">
-          <div>
-            <div class="trust-title">Stermonitor-ready</div>
-            <div class="trust-text">Netjes opgemaakt, consistent en makkelijk te plaatsen.</div>
-          </div>
+    <div class="trust">
+      <div class="trust-item">
+        <img class="trust-ico" src="{{ url_for('static', filename='assets/icon-shield.webp') }}" alt="">
+        <div>
+          <div class="trust-title">Veilig</div>
+          <div class="trust-text">Leerlingen werken in hun eigen omgeving. Docenten houden overzicht.</div>
         </div>
       </div>
-
-      <div class="badges">
-        <div class="badge">DOCX → HTML</div>
-        <div class="badge">Werkboekjes</div>
-        <div class="badge">Toetsen</div>
-        <div class="badge">Docent & leerling</div>
+      <div class="trust-item">
+        <img class="trust-ico" src="{{ url_for('static', filename='assets/icon-bolt.webp') }}" alt="">
+        <div>
+          <div class="trust-title">Snel</div>
+          <div class="trust-text">Van Word naar bruikbare output in minuten, inclusief structuur.</div>
+        </div>
+      </div>
+      <div class="trust-item">
+        <img class="trust-ico" src="{{ url_for('static', filename='assets/icon-layout.webp') }}" alt="">
+        <div>
+          <div class="trust-title">Stermonitor-ready</div>
+          <div class="trust-text">Netjes opgemaakt, consistent en makkelijk te plaatsen.</div>
+        </div>
       </div>
     </div>
 
-    <div class="hero-right">
-      <div class="panel">
-        <div class="panel-top">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="badges">
+      <div class="badge">DOCX → HTML</div>
+      <div class="badge">Werkboekjes</div>
+      <div class="badge">Toetsen</div>
+      <div class="badge">Docent & leerling</div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="panel">
+      <div class="panel-top">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+
+      <div class="panel-body">
+        <div class="mini-card">
+          <div class="mini-title">DOCX → HTML</div>
+          <div class="mini-text">Stermonitor-ready output met afbeeldingen en koppen.</div>
         </div>
 
-        <div class="panel-body">
-          <div class="mini-card">
-            <div class="mini-title">DOCX → HTML</div>
-            <div class="mini-text">Stermonitor-ready output met afbeeldingen en koppen.</div>
-          </div>
+        <div class="mini-card">
+          <div class="mini-title">Werkboekjes</div>
+          <div class="mini-text">Stappenplan, materialen, foto’s en export naar DOCX.</div>
+        </div>
 
-          <div class="mini-card">
-            <div class="mini-title">Werkboekjes</div>
-            <div class="mini-text">Stappenplan, materialen, foto’s en export naar DOCX.</div>
-          </div>
+        <div class="mini-card">
+          <div class="mini-title">Toetsen</div>
+          <div class="mini-text">Aanmaken, afnemen, inzendingen terugkijken.</div>
+        </div>
 
-          <div class="mini-card">
-            <div class="mini-title">Toetsen</div>
-            <div class="mini-text">Aanmaken, afnemen, inzendingen terugkijken.</div>
-          </div>
-
-          <div class="mini-preview">
-            <img
-              src="{{ url_for('static', filename='assets/preview-dashboard.webp') }}"
-              alt="Voorbeeld dashboard"
-              class="preview-img"
-            />
-            <div class="preview-cap">Voorbeeld: overzicht voor docent</div>
-          </div>
+        <div class="mini-preview">
+          <img
+            src="{{ url_for('static', filename='assets/preview-dashboard.webp') }}"
+            alt="Voorbeeld dashboard"
+            class="preview-img"
+          />
+          <div class="preview-cap">Voorbeeld: overzicht voor docent</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-
-<!-- ZO WERKT HET -->
 <section class="how" id="how">
-  <div class="container">
-    <div class="section-head">
-      <h2>Zo werkt het</h2>
-      <p>Drie stappen, zonder gedoe. Je kunt vandaag al beginnen.</p>
+  <div class="section-head">
+    <h2>Zo werkt het</h2>
+    <p>Drie stappen, zonder gedoe. Je kunt vandaag al beginnen.</p>
+  </div>
+
+  <div class="how-grid">
+    <div class="card step">
+      <img class="step-ico" src="{{ url_for('static', filename='assets/icon-upload.webp') }}" alt="">
+      <h3>1. Upload</h3>
+      <p>Upload je Word-bestand of materiaal. Mediawize haalt structuur, koppen en afbeeldingen eruit.</p>
     </div>
-
-    <div class="how-grid">
-      <div class="card step">
-        <img class="step-ico" src="{{ url_for('static', filename='assets/icon-upload.webp') }}" alt="">
-        <h3>1. Upload</h3>
-        <p>Upload je Word-bestand of materiaal. Mediawize haalt structuur, koppen en afbeeldingen eruit.</p>
-      </div>
-
-      <div class="card step">
-        <img class="step-ico" src="{{ url_for('static', filename='assets/icon-magic.webp') }}" alt="">
-        <h3>2. Genereer</h3>
-        <p>Kies de module. Je krijgt nette output met vaste opmaak: consistent en duidelijk voor leerlingen.</p>
-      </div>
-
-      <div class="card step">
-        <img class="step-ico" src="{{ url_for('static', filename='assets/icon-export.webp') }}" alt="">
-        <h3>3. Gebruik</h3>
-        <p>Kopieer naar Stermonitor/LessonUp, download je werkboek, of neem een toets af en bekijk inzendingen.</p>
-      </div>
+    <div class="card step">
+      <img class="step-ico" src="{{ url_for('static', filename='assets/icon-magic.webp') }}" alt="">
+      <h3>2. Genereer</h3>
+      <p>Kies de module. Je krijgt nette output met vaste opmaak: consistent en duidelijk voor leerlingen.</p>
+    </div>
+    <div class="card step">
+      <img class="step-ico" src="{{ url_for('static', filename='assets/icon-export.webp') }}" alt="">
+      <h3>3. Gebruik</h3>
+      <p>Kopieer naar Stermonitor/LessonUp, download je werkboek, of neem een toets af en bekijk inzendingen.</p>
     </div>
   </div>
 </section>
 
-
-<!-- EXTRA SECTIE: WAT KRIJG JE -->
-<section class="features" id="features">
-  <div class="container">
-    <div class="section-head">
-      <h2>Wat krijg je precies?</h2>
-      <p>Een set tools die je werk versnelt en je lesmateriaal consistent maakt.</p>
-    </div>
-
-    <div class="grid">
-      <div class="card module">
-        <div class="module-top">
-          <img class="module-ico" src="{{ url_for('static', filename='assets/icon-layout.webp') }}" alt="">
-          <h3>Consistente opmaak</h3>
-        </div>
-        <p>Elke export heeft dezelfde stijl, zodat leerlingen sneller snappen wat ze moeten doen.</p>
-      </div>
-
-      <div class="card module">
-        <div class="module-top">
-          <img class="module-ico" src="{{ url_for('static', filename='assets/icon-docx-html.webp') }}" alt="">
-          <h3>Afbeeldingen automatisch mee</h3>
-        </div>
-        <p>Afbeeldingen komen netjes mee in je output, zonder schuiven en plakken.</p>
-      </div>
-
-      <div class="card module">
-        <div class="module-top">
-          <img class="module-ico" src="{{ url_for('static', filename='assets/icon-tests.webp') }}" alt="">
-          <h3>Overzicht per rol</h3>
-        </div>
-        <p>Docent beheert, leerling voert uit. Iedereen ziet alleen wat nodig is.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- MODULES -->
 <section id="modules" class="modules">
-  <div class="container">
-    <div class="section-head">
-      <h2>Modules</h2>
-      <p>Alles in één plek. Kies wat je nodig hebt, zonder dat je je workflow hoeft om te gooien.</p>
-    </div>
-
-    <div class="grid">
-      <div class="card module">
-        <div class="module-top">
-          <img class="module-ico" src="{{ url_for('static', filename='assets/icon-docx-html.webp') }}" alt="">
-          <h3>DOCX → HTML</h3>
-        </div>
-        <p>
-          Zet Word om naar nette HTML met koppen, tussenkoppen, tabellen en afbeeldingen.
-          Ideaal voor Stermonitor of LessonUp.
-        </p>
-        <ul class="list">
-          <li>Consistente opmaak</li>
-          <li>Afbeeldingen netjes geplaatst</li>
-          <li>Direct te kopiëren</li>
-        </ul>
-        <div class="card-actions">
-          <a class="btn small" href="{{ url_for('html_tool.index_get') }}">Open module</a>
-        </div>
-        <img class="module-preview" src="{{ url_for('static', filename='assets/preview-html.webp') }}" alt="Voorbeeld HTML output">
-      </div>
-
-      <div class="card module">
-        <div class="module-top">
-          <img class="module-ico" src="{{ url_for('static', filename='assets/icon-workbook.webp') }}" alt="">
-          <h3>Werkboekjes</h3>
-        </div>
-        <p>
-          Genereer een werkboek met duidelijke stappen, materialen, afbeeldingen en ruimte voor antwoorden.
-          Handig voor praktijkopdrachten.
-        </p>
-        <ul class="list">
-          <li>Stappenplan + checklists</li>
-          <li>Materialenlijst</li>
-          <li>Export naar DOCX</li>
-        </ul>
-        <div class="card-actions">
-          <a class="btn small" href="{{ url_for('workbook.workbook_get') }}">Open module</a>
-        </div>
-        <img class="module-preview" src="{{ url_for('static', filename='assets/preview-workbook.webp') }}" alt="Voorbeeld werkboek">
-      </div>
-
-      <div class="card module">
-        <div class="module-top">
-          <img class="module-ico" src="{{ url_for('static', filename='assets/icon-tests.webp') }}" alt="">
-          <h3>Toetsen</h3>
-        </div>
-        <p>
-          Docenten maken toetsen, leerlingen maken ze digitaal. Inzendingen en resultaten blijven overzichtelijk bij elkaar.
-        </p>
-        <ul class="list">
-          <li>Docent-overzicht</li>
-          <li>Leerling-omgeving</li>
-          <li>Terugkijken en beheren</li>
-        </ul>
-        <div class="card-actions">
-          <a class="btn small" href="{{ url_for('docent.dashboard') }}">Docent</a>
-          <a class="btn small ghost" href="{{ url_for('leerling.dashboard') }}">Leerling</a>
-        </div>
-        <img class="module-preview" src="{{ url_for('static', filename='assets/preview-tests.webp') }}" alt="Voorbeeld toetsen">
-      </div>
-    </div>
+  <div class="section-head">
+    <h2>Modules</h2>
+    <p>Alles in één plek. Kies wat je nodig hebt, zonder dat je je workflow hoeft om te gooien.</p>
   </div>
-</section>
 
-
-<!-- VOOR WIE -->
-<section class="info">
-  <div class="container">
-    <div class="card wide">
-      <h2>Voor wie?</h2>
-      <p class="muted">
-        Mediawize is gebouwd voor techniekonderwijs: helder, praktisch en zonder poespas.
+  <div class="grid">
+    <div class="card module">
+      <div class="module-top">
+        <img class="module-ico" src="{{ url_for('static', filename='assets/icon-docx-html.webp') }}" alt="">
+        <h3>DOCX → HTML</h3>
+      </div>
+      <p>
+        Zet Word om naar nette HTML met koppen, tussenkoppen, tabellen en afbeeldingen.
+        Ideaal voor Stermonitor of LessonUp.
       </p>
-
-      <div class="two">
-        <div class="section">
-          <h3>Docenten</h3>
-          <p>
-            Maak lesmateriaal sneller, beheer toetsen centraal en download inzendingen zonder losse mapjes
-            of eindeloze mailtjes.
-          </p>
-        </div>
-        <div class="section">
-          <h3>Leerlingen</h3>
-          <p>
-            Een rustige omgeving met duidelijke stappen. Minder afleiding, meer focus.
-            Toetsen en opdrachten zijn overzichtelijk en veilig.
-          </p>
-        </div>
+      <ul class="list">
+        <li>Consistente opmaak</li>
+        <li>Afbeeldingen netjes geplaatst</li>
+        <li>Direct te kopiëren</li>
+      </ul>
+      <div class="card-actions">
+        <a class="btn small" href="{{ url_for('html_tool.index_get') }}">Open module</a>
       </div>
+      <img class="module-preview" src="{{ url_for('static', filename='assets/preview-html.webp') }}" alt="Voorbeeld HTML output">
+    </div>
 
-      <div class="admin-note">
-        <strong>Admin</strong>
-        <span>Beheer rollen en toegang via het adminpaneel.</span>
-        <a class="btn small ghost" href="{{ url_for('admin.index') }}">Open admin</a>
+    <div class="card module">
+      <div class="module-top">
+        <img class="module-ico" src="{{ url_for('static', filename='assets/icon-workbook.webp') }}" alt="">
+        <h3>Werkboekjes</h3>
       </div>
+      <p>
+        Genereer een werkboek met duidelijke stappen, materialen, afbeeldingen en ruimte voor antwoorden.
+        Handig voor praktijkopdrachten.
+      </p>
+      <ul class="list">
+        <li>Stappenplan + checklists</li>
+        <li>Materialenlijst</li>
+        <li>Export naar DOCX</li>
+      </ul>
+      <div class="card-actions">
+        <a class="btn small" href="{{ url_for('workbook.workbook_get') }}">Open module</a>
+      </div>
+      <img class="module-preview" src="{{ url_for('static', filename='assets/preview-workbook.webp') }}" alt="Voorbeeld werkboek">
+    </div>
+
+    <div class="card module">
+      <div class="module-top">
+        <img class="module-ico" src="{{ url_for('static', filename='assets/icon-tests.webp') }}" alt="">
+        <h3>Toetsen</h3>
+      </div>
+      <p>
+        Docenten maken toetsen, leerlingen maken ze digitaal. Inzendingen en resultaten blijven overzichtelijk bij elkaar.
+      </p>
+      <ul class="list">
+        <li>Docent-overzicht</li>
+        <li>Leerling-omgeving</li>
+        <li>Terugkijken en beheren</li>
+      </ul>
+      <div class="card-actions">
+        <a class="btn small" href="{{ url_for('docent.dashboard') }}">Docent</a>
+        <a class="btn small ghost" href="{{ url_for('leerling.dashboard') }}">Leerling</a>
+      </div>
+      <img class="module-preview" src="{{ url_for('static', filename='assets/preview-tests.webp') }}" alt="Voorbeeld toetsen">
     </div>
   </div>
 </section>
 
+<section class="info">
+  <div class="card wide">
+    <h2>Voor wie?</h2>
+    <p class="muted">
+      Mediawize is gebouwd voor techniekonderwijs: helder, praktisch en zonder poespas.
+    </p>
 
-<!-- FAQ -->
+    <div class="two">
+      <div class="section">
+        <h3>Docenten</h3>
+        <p>
+          Maak lesmateriaal sneller, beheer toetsen centraal en download inzendingen zonder losse mapjes
+          of eindeloze mailtjes.
+        </p>
+      </div>
+      <div class="section">
+        <h3>Leerlingen</h3>
+        <p>
+          Een rustige omgeving met duidelijke stappen. Minder afleiding, meer focus.
+          Toetsen en opdrachten zijn overzichtelijk en veilig.
+        </p>
+      </div>
+    </div>
+
+    <div class="admin-note">
+      <strong>Admin</strong>
+      <span>Beheer rollen en toegang via het adminpaneel.</span>
+      <a class="btn small ghost" href="{{ url_for('admin.index') }}">Open admin</a>
+    </div>
+  </div>
+</section>
+
 <section class="faq" id="faq">
-  <div class="container">
-    <div class="section-head">
-      <h2>Veelgestelde vragen</h2>
-      <p>Kort en duidelijk, zodat je meteen weet wat je krijgt.</p>
+  <div class="section-head">
+    <h2>Veelgestelde vragen</h2>
+    <p>Kort en duidelijk, zodat je meteen weet wat je krijgt.</p>
+  </div>
+
+  <div class="faq-grid">
+    <div class="card faq-item">
+      <h3>Kan ik meteen een account maken?</h3>
+      <p>Ja. Klik op “Account maken”. Daarna kun je inloggen en je rol kiezen (docent/leerling).</p>
     </div>
 
-    <div class="faq-grid">
-      <div class="card faq-item">
-        <h3>Kan ik meteen een account maken?</h3>
-        <p>Ja. Klik op “Account maken”. Daarna kun je inloggen en je rol kiezen (docent/leerling).</p>
-      </div>
-
-      <div class="card faq-item">
-        <h3>Werkt dit met Stermonitor?</h3>
-        <p>De HTML-output is gemaakt om netjes te plakken in Stermonitor of te gebruiken in LessonUp.</p>
-      </div>
-
-      <div class="card faq-item">
-        <h3>Waar blijven mijn bestanden?</h3>
-        <p>Alles blijft binnen de omgeving. Docenten houden overzicht, leerlingen zien alleen wat nodig is.</p>
-      </div>
-
-      <div class="card faq-item">
-        <h3>Kan ik dit ook op mobiel gebruiken?</h3>
-        <p>Ja, de interface is responsief. Op desktop werkt het het prettigst voor bouwen en beheren.</p>
-      </div>
+    <div class="card faq-item">
+      <h3>Werkt dit met Stermonitor?</h3>
+      <p>De HTML-output is gemaakt om netjes te plakken in Stermonitor of te gebruiken in LessonUp.</p>
     </div>
 
-    <div class="final-cta">
-      <div>
-        <h3>Klaar om te starten?</h3>
-        <p>Maak een account aan en probeer de modules. Binnen een paar minuten heb je je eerste output.</p>
-      </div>
-      <div class="final-cta-actions">
-        <a class="btn primary" href="{{ url_for('auth.signup') }}">Account maken</a>
-        <a class="btn ghost" href="{{ url_for('auth.login') }}">Inloggen</a>
-      </div>
+    <div class="card faq-item">
+      <h3>Waar blijven mijn bestanden?</h3>
+      <p>Alles blijft binnen de omgeving. Docenten houden overzicht, leerlingen zien alleen wat nodig is.</p>
+    </div>
+
+    <div class="card faq-item">
+      <h3>Kan ik dit ook op mobiel gebruiken?</h3>
+      <p>Ja, de interface is responsief. Op desktop werkt het het prettigst voor bouwen en beheren.</p>
+    </div>
+  </div>
+
+  <div class="final-cta">
+    <div>
+      <h3>Klaar om te starten?</h3>
+      <p>Maak een account aan en probeer de modules. Binnen een paar minuten heb je je eerste output.</p>
+    </div>
+    <div class="final-cta-actions">
+      <a class="btn primary" href="{{ url_for('auth.signup') }}">Account maken</a>
+      <a class="btn ghost" href="{{ url_for('auth.login') }}">Inloggen</a>
     </div>
   </div>
 </section>
