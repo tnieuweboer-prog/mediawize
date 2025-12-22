@@ -7,7 +7,7 @@ bp = Blueprint("leerling", __name__, url_prefix="/leerling")
 
 def _login_required_leerling():
     if not session.get("user"):
-        return redirect(url_for("auth.login_get"))
+        return redirect(url_for("auth.login"))
     if session.get("role") != "leerling":
         return redirect(url_for("home"))
     return None
