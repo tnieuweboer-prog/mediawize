@@ -1,59 +1,143 @@
-# modules/core/auth.py
-from __future__ import annotations
-
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, current_app
+import os
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
 
 bp = Blueprint("auth", __name__)
 
+# =========================
+# Database helpers
+# =========================
 
-# ------------------------------------------------------------
-# Login pagina
-# ------------------------------------------------------------
-@bp.get("/login")
-def login_get():
-    # Als al ingelogd: stuur naar dashboard
-    if session.get("user"):
-        if session.get("role") == "docent":
-            return redirect(url_for("docent.dashboard"))
-        if session.get("role") == "leerling":
-            return redirect(url_for("leerling.dashboard"))
-    return render_template("auth/login.html", page_title="Inloggen")
+def _data_dir():
+    return current_app.config.get("DATA_DIR", os.path.join(os.getcwd(), "data"))
 
+def _db_path():
+    os.makedirs(_data_dir(), exist_ok=True)
+    return os.path.join(_data_dir(), "app.db")
 
-@bp.post("/login")
-def login_post():
-    """
-    Dummy login:
-    - docent: email + wachtwoord (mag leeg voor nu)
-    - leerling: naam/kode mag ook, maar we houden het simpel
-    Later vervangen door Microsoft OAuth.
-    """
-    email = (request.form.get("email") or "").strip().lower()
-    role = (request.form.get("role") or "").strip().lower()
+def _get_conn():
+    conn = sqlite3.connect(_db_path())
+    conn.row_factory = sqlite3.Row
+    return conn
 
-    if role not in ("docent", "leerling"):
-        return render_template("auth/login.html", page_title="Inloggen", error="Kies docent of leerling.")
+def init_db():
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'docent',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
 
-    if not email:
-        return render_template("auth/login.html", page_title="Inloggen", error="Vul een e-mailadres in.")
+@bp.before_app_request
+def ensure_db():
+    try:
+        init_db()
+    except Exception:
+        # bij import-fouten of migraties niet hard crashen
+        pass
 
-    # Session zetten
-    session["user"] = email
-    session["role"] = role
+# =========================
+# Login
+# =========================
 
-    # Simpele admin regel (later netjes in admin module)
-    # Bijvoorbeeld: jouw eigen account als admin
-    admin_emails = {"tom@atlascollege.nl", "emy@atlascollege.nl"}  # pas aan
-    session["is_admin"] = email in admin_emails
+@bp.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
 
-    # Redirect naar juiste dashboard
-    if role == "docent":
-        return redirect(url_for("docent.dashboard"))
-    return redirect(url_for("leerling.dashboard"))
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
 
+        conn = _get_conn()
+        user = conn.execute(
+            "SELECT * FROM users WHERE email = ?",
+            (email,)
+        ).fetchone()
+        conn.close()
 
-@bp.get("/logout")
+        if not user or not check_password_hash(user["password_hash"], password):
+            error = "Onjuiste e-mail of wachtwoord."
+        else:
+            session.clear()
+            session["user_id"] = user["id"]
+            session["email"] = user["email"]
+            session["role"] = user["role"]
+
+            if user["role"] == "docent":
+                return redirect("/docent/")
+            else:
+                return redirect("/leerling/")
+
+    return render_template("auth/login.html", error=error)
+
+# =========================
+# Signup
+# =========================
+
+@bp.route("/signup", methods=["GET", "POST"])
+def signup():
+    error = None
+
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        role = (request.form.get("role") or "docent").lower()
+
+        if role not in ("docent", "leerling"):
+            role = "docent"
+
+        if not email or "@" not in email:
+            error = "Vul een geldig e-mailadres in."
+        elif len(password) < 8:
+            error = "Wachtwoord moet minimaal 8 tekens zijn."
+        else:
+            try:
+                pw_hash = generate_password_hash(password)
+                conn = _get_conn()
+                conn.execute(
+                    "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
+                    (email, pw_hash, role)
+                )
+                conn.commit()
+
+                user = conn.execute(
+                    "SELECT * FROM users WHERE email = ?",
+                    (email,)
+                ).fetchone()
+                conn.close()
+
+                session.clear()
+                session["user_id"] = user["id"]
+                session["email"] = user["email"]
+                session["role"] = user["role"]
+
+                if user["role"] == "docent":
+                    return redirect("/docent/")
+                else:
+                    return redirect("/leerling/")
+
+            except sqlite3.IntegrityError:
+                error = "Dit e-mailadres bestaat al."
+            except Exception as e:
+                error = f"Fout bij registreren: {e}"
+
+    return render_template("auth/signup.html", error=error)
+
+# =========================
+# Logout
+# =========================
+
+@bp.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("home"))
+    return redirect("/")
+
 
