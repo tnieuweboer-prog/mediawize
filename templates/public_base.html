@@ -3,42 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Triade Tools</title>
-  <link rel="stylesheet" href="/static/css/app.css">
+
+  <title>{{ page_title if page_title else "Mediawize" }}</title>
+
+  <!-- Basis styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <!-- Home / public styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+
 </head>
 <body>
 
-<header class="pub-header">
-  <div class="pub-header-inner">
-    <div class="pub-brand">
-      <img class="pub-logo" src="/static/assets/logo.png" alt="De Triade">
+  <!-- ================= HEADER ================= -->
+  <header style="max-width:1200px; margin:0 auto; padding:20px 20px 0;">
+    <div class="brand">
+      <img
+        src="{{ url_for('static', filename='assets/mediawize-logo.webp') }}"
+        alt="Mediawize"
+        class="brand-logo"
+      />
+    </div>
+  </header>
+
+  <!-- ================= MAIN ================= -->
+  <main style="max-width:1200px; margin:0 auto; padding:32px 20px;">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer style="max-width:1200px; margin:40px auto 20px; padding:0 20px; color:#94a3b8;">
+    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
       <div>
-        <div class="pub-title">Triade Tools</div>
-        <div class="pub-subtitle">DOCX · Werkboekjes · Toetsen</div>
+        © {{ now_year }} Mediawize
+      </div>
+
+      <div style="display:flex; gap:14px;">
+        <a href="/" style="color:#94a3b8; text-decoration:none;">Home</a>
+        <a href="{{ url_for('auth.login') }}" style="color:#94a3b8; text-decoration:none;">Inloggen</a>
       </div>
     </div>
-
-    <nav class="pub-nav">
-      <a href="/" class="{{ 'active' if active_tab == 'home' else '' }}">Home</a>
-      <a href="/login" class="{{ 'active' if active_tab == 'login' else '' }}">Inloggen</a>
-      <a href="/signup" class="{{ 'active' if active_tab == 'signup' else '' }}">Account maken</a>
-    </nav>
-  </div>
-</header>
-
-<main class="pub-main">
-  <div class="pub-container">
-    {% block content %}{% endblock %}
-  </div>
-</main>
-
-<footer class="pub-footer">
-  <div class="pub-footer-inner">
-    <span>© {{ (config.SITE_NAME if config and config.SITE_NAME else 'Triade Tools') }}</span>
-    <span class="pub-footer-dot">•</span>
-    <span>SG De Triade</span>
-  </div>
-</footer>
+  </footer>
 
 </body>
 </html>
+
