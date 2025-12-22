@@ -2,46 +2,72 @@
 from __future__ import annotations
 
 import os
-from flask import Flask
+from datetime import datetime
 
-# Core
-from modules.core.layout import inject_globals
-from modules.core.auth import auth_bp
+from flask import Flask, render_template, session
 
-# Modules
+# Blueprints
+from modules.core.auth import bp as auth_bp
+from modules.docent.routes import bp as docent_bp
+from modules.leerling.routes import bp as leerling_bp
 from modules.html_tool.routes import bp as html_bp
 from modules.workbook.routes import bp as workbook_bp
-from modules.toetsen.docent_routes import bp as toetsen_docent_bp
-from modules.toetsen.leerling_routes import bp as toetsen_leerling_bp
 from modules.admin.routes import bp as admin_bp
 
 
 def create_app() -> Flask:
-    app = Flask(__name__, template_folder="templates", static_folder="static")
+    app = Flask(__name__, static_folder="static", template_folder="templates")
 
-    # SECRET (zet dit op VPS als env var: FLASK_SECRET_KEY)
-    app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
+    # Secret key (liefst uit env)
+    app.secret_key = os.environ.get("SECRET_KEY", "dev-change-me")
 
-    # Globale template variabelen (current_user etc.)
-    inject_globals(app)
+    # ---- globals voor templates ----
+    @app.context_processor
+    def inject_globals():
+        role = session.get("role")
+        return {
+            "now_year": datetime.utcnow().year,
+            "current_user": {
+                "email": session.get("user"),
+                "role": role,
+                "is_authenticated": bool(session.get("user")),
+                "is_admin": bool(session.get("is_admin")),
+            },
+        }
 
-    # Core auth/login/logout
-    app.register_blueprint(auth_bp)
+    # ---- Publieke landingspagina ----
+    @app.get("/")
+    def home():
+        # Als iemand al ingelogd is, stuur direct naar juiste dashboard
+        if session.get("user"):
+            if session.get("role") == "docent":
+                return render_template(
+                    "public/home.html",
+                    page_title="Triade Tools",
+                )
+            if session.get("role") == "leerling":
+                return render_template(
+                    "public/home.html",
+                    page_title="Triade Tools",
+                )
+        return render_template("public/home.html", page_title="Triade Tools")
 
-    # Tools/modules
-    # Belangrijk: html tool staat NIET op "/" maar op "/html" zodat home/login niet botst
-    app.register_blueprint(html_bp)              # /html
-    app.register_blueprint(workbook_bp)          # /workbook
-    app.register_blueprint(toetsen_docent_bp)    # /docent/...
-    app.register_blueprint(toetsen_leerling_bp)  # /leerling/...
-    app.register_blueprint(admin_bp)             # /admin
+    # ---- Register blueprints ----
+    app.register_blueprint(auth_bp)       # /login, /logout
+    app.register_blueprint(docent_bp)     # /docent/
+    app.register_blueprint(leerling_bp)   # /leerling/
+    app.register_blueprint(html_bp)       # /html/
+    app.register_blueprint(workbook_bp)   # /workbook/
+    app.register_blueprint(admin_bp)      # /admin/
 
     return app
 
 
+# Gunicorn entrypoint verwacht "app"
 app = create_app()
 
 if __name__ == "__main__":
-    # Dev-run (systemd/gunicorn gebruikt app:app)
+    # lokaal debuggen
     app.run(host="0.0.0.0", port=8501, debug=True)
+
 
