@@ -3,74 +3,57 @@ from __future__ import annotations
 
 from flask import Blueprint, render_template, request, redirect, url_for, session
 
-auth_bp = Blueprint("auth", __name__)
+bp = Blueprint("auth", __name__)
 
 
 # ------------------------------------------------------------
-# Login
+# Login pagina
 # ------------------------------------------------------------
-@auth_bp.get("/login")
+@bp.get("/login")
 def login_get():
-    """
-    Toon loginpagina.
-    Als gebruiker al ingelogd is, direct doorsturen naar dashboard.
-    """
-    role = session.get("role")
-
-    if role == "docent":
-        return redirect(url_for("docent.dashboard"))
-    if role == "leerling":
-        return redirect(url_for("leerling.dashboard"))
-
-    return render_template(
-        "auth/login.html",
-        active_tab="login",
-        error=None,
-    )
+    # Als al ingelogd: stuur naar dashboard
+    if session.get("user"):
+        if session.get("role") == "docent":
+            return redirect(url_for("docent.dashboard"))
+        if session.get("role") == "leerling":
+            return redirect(url_for("leerling.dashboard"))
+    return render_template("auth/login.html", page_title="Inloggen")
 
 
-@auth_bp.post("/login")
+@bp.post("/login")
 def login_post():
     """
     Dummy login:
-    - docent / leerling
-    - naam opslaan in session
+    - docent: email + wachtwoord (mag leeg voor nu)
+    - leerling: naam/kode mag ook, maar we houden het simpel
+    Later vervangen door Microsoft OAuth.
     """
-    role = (request.form.get("role") or "").strip()
-    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
+    role = (request.form.get("role") or "").strip().lower()
 
     if role not in ("docent", "leerling"):
-        return render_template(
-            "auth/login.html",
-            active_tab="login",
-            error="Kies docent of leerling.",
-        )
+        return render_template("auth/login.html", page_title="Inloggen", error="Kies docent of leerling.")
 
-    if not name:
-        return render_template(
-            "auth/login.html",
-            active_tab="login",
-            error="Vul je naam in.",
-        )
+    if not email:
+        return render_template("auth/login.html", page_title="Inloggen", error="Vul een e-mailadres in.")
 
-    # Session opslaan
-    session.clear()
-    session["user"] = name
+    # Session zetten
+    session["user"] = email
     session["role"] = role
-    session["is_admin"] = False  # later via admin module
 
+    # Simpele admin regel (later netjes in admin module)
+    # Bijvoorbeeld: jouw eigen account als admin
+    admin_emails = {"tom@atlascollege.nl", "emy@atlascollege.nl"}  # pas aan
+    session["is_admin"] = email in admin_emails
+
+    # Redirect naar juiste dashboard
     if role == "docent":
         return redirect(url_for("docent.dashboard"))
-
     return redirect(url_for("leerling.dashboard"))
 
 
-# ------------------------------------------------------------
-# Logout
-# ------------------------------------------------------------
-@auth_bp.get("/logout")
+@bp.get("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("auth.login_get"))
-
+    return redirect(url_for("home"))
 
