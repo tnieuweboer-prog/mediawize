@@ -520,3 +520,106 @@ section{
   gap:10px;
   flex-wrap:wrap;
 }
+/* =========================
+   RUIMTE / RUST (landingpage)
+========================= */
+
+section{
+  padding: 34px 0;               /* meer ademruimte */
+}
+
+.hero{
+  gap: 34px;                      /* meer ruimte links/rechts */
+  margin-top: 10px;
+  align-items: start;
+}
+
+@media (max-width:900px){
+  section{ padding: 26px 0; }
+  .hero{ gap: 18px; }
+}
+
+/* hero logo */
+.hero-brand{ margin-bottom: 10px; }
+.hero-logo{
+  height: 34px;                  /* klein en netjes */
+  width: auto;
+  opacity: .95;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.25));
+}
+
+/* typografie iets ruimer */
+.h1{ margin-top: 6px; }
+.lead, .sublead{
+  line-height: 1.75;
+}
+
+/* CTA iets losser */
+.cta{ margin-top: 18px; }
+
+/* trust blokken: minder “op elkaar” */
+.trust{
+  margin-top: 22px;
+  gap: 14px;
+}
+.trust-item{
+  padding: 16px 16px;
+  border-radius: 18px;
+}
+
+/* badges iets meer ruimte */
+.badges{
+  margin-top: 18px;
+  gap: 12px;
+}
+
+/* panel rechterkant: meer lucht */
+.panel-body{
+  gap: 14px;
+  padding: 18px;
+}
+
+/* Nieuwe hero visual */
+.hero-visual{
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.10);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.hero-visual-img{
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: .95;
+}
+
+/* how + modules grids meer spacing */
+.how-grid, .grid{
+  gap: 18px;
+}
+
+.card.step, .card.module{
+  padding: 20px;
+}
+
+/* card teksten iets rustiger */
+.card.step p, .card.module p{
+  line-height: 1.7;
+}
+
+/* module preview iets strakker */
+.module-preview{
+  margin-top: 14px;
+  border-radius: 14px;
+}
+
+/* FAQ meer witruimte */
+.faq-grid{ gap: 18px; }
+.card.faq-item{ padding: 20px; }
+
+/* Final CTA iets groter en rustiger */
+.final-cta{
+  margin-top: 24px;
+  padding: 20px;
+  gap: 16px;
+}
