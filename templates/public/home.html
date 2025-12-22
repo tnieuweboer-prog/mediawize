@@ -1,0 +1,89 @@
+{% extends "public_base.html" %}
+
+{% block content %}
+
+<section style="display:grid; grid-template-columns:1fr; gap:32px;">
+
+  <!-- Hero -->
+  <div style="display:grid; grid-template-columns:1fr; gap:18px;">
+    <h1 style="font-size:2rem; line-height:1.2; margin:0;">
+      Digitale tools voor techniekonderwijs
+    </h1>
+
+    <p class="lead" style="max-width:720px;">
+      Triade Tools helpt docenten bij het maken van HTML-lessen, werkboekjes en
+      digitale toetsen. Leerlingen werken veilig en overzichtelijk binnen hun
+      eigen omgeving.
+    </p>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <a href="{{ url_for('auth.login_get') }}"
+         style="background:#22c55e; color:white; text-decoration:none; padding:12px 20px; border-radius:999px; font-weight:800;">
+        Inloggen
+      </a>
+
+      <a href="#modules"
+         style="background:#e5e7eb; color:#0f172a; text-decoration:none; padding:12px 20px; border-radius:999px; font-weight:700;">
+        Bekijk modules
+      </a>
+    </div>
+  </div>
+
+  <!-- Modules -->
+  <div id="modules" class="card">
+    <h2>Modules</h2>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:16px;">
+
+      <div class="section">
+        <h3>DOCX → HTML</h3>
+        <p class="lead">
+          Zet Word-bestanden om naar nette HTML voor Stermonitor of LessonUp.
+        </p>
+      </div>
+
+      <div class="section">
+        <h3>Werkboekjes</h3>
+        <p class="lead">
+          Genereer gestructureerde werkboekjes met stappen, afbeeldingen en
+          materiaalstaten.
+        </p>
+      </div>
+
+      <div class="section">
+        <h3>Toetsen</h3>
+        <p class="lead">
+          Docenten maken toetsen, leerlingen maken ze digitaal.
+          Inzendingen komen overzichtelijk terug bij de docent.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Rollen -->
+  <div class="card">
+    <h2>Voor wie?</h2>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-top:16px;">
+
+      <div class="section">
+        <h3>Docenten</h3>
+        <p class="lead">
+          Maak lesmateriaal, beheer toetsen en download inzendingen.
+        </p>
+      </div>
+
+      <div class="section">
+        <h3>Leerlingen</h3>
+        <p class="lead">
+          Maak toetsen online in een rustige en duidelijke omgeving.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
+{% endblock %}
