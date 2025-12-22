@@ -1,88 +1,107 @@
-from flask import Flask, render_template, redirect, url_for, session
+# app.py
+from __future__ import annotations
 
-# Blueprints (moeten in jouw project bestaan)
+import os
+from datetime import datetime
+
+from flask import Flask, render_template, session
+
+
+# Blueprints (nieuwe structuur)
 from modules.core.auth import bp as auth_bp
-from modules.html_tool.routes import bp as html_bp
-from modules.workbook.routes import bp as workbook_bp
 from modules.toetsen.docent_routes import bp as docent_bp
 from modules.toetsen.leerling_routes import bp as leerling_bp
+from modules.html_tool.routes import bp as html_bp
+from modules.workbook.routes import bp as workbook_bp
 from modules.admin.routes import bp as admin_bp
 
 
-def create_app():
-    app = Flask(__name__)
+def create_app() -> Flask:
+    app = Flask(__name__, static_folder="static", template_folder="templates")
 
-    # -------------------------
-    # CONFIG
-    # -------------------------
-    app.secret_key = "change-this-secret"  # later via env var
-    app.config["DATA_DIR"] = "/opt/mediawize/data"
+    # Secret key (liefst uit env)
+    app.secret_key = os.environ.get("SECRET_KEY", "dev-change-me")
 
-    # -------------------------
-    # HOME (Landing page)
-    # -------------------------
-    @app.route("/")
-    def home():
+    # Data dir (voor users.json / toetsen storage etc)
+    app.config["DATA_DIR"] = os.environ.get("DATA_DIR", "/opt/mediawize/data")
+
+    # ---- helpers voor session compatibiliteit ----
+    def _session_user_email() -> str | None:
         """
-        Landing page (GEEN dashboard).
-        Toont uitleg + knoppen naar login/signup.
-        In public_base.html kun je de content mooi maken.
+        Ondersteunt:
+        - session["user"] = "mail@..."
+        - session["user"] = {"email": "...", "role": "..."}
         """
-        modules = [
-            {
-                "title": "DOCX → HTML (Stermonitor)",
-                "desc": "Zet Word-bestanden om naar nette Stermonitor-HTML met jouw styling.",
-                "href": url_for("html_tool.index"),
-            },
-            {
-                "title": "Werkboek generator",
-                "desc": "Maak automatisch een werkboekje (voorblad + stappen) vanuit DOCX.",
-                "href": url_for("workbook.index"),
-            },
-            {
-                "title": "Toetsen",
-                "desc": "Docent maakt toetsen, leerling maakt ze online. (PDF export later)",
-                "href": url_for("docent.dashboard"),
-            },
-        ]
+        u = session.get("user")
+        if isinstance(u, dict):
+            return u.get("email")
+        if isinstance(u, str):
+            return u
+        return None
 
-        return render_template(
-            "public_base.html",
-            modules=modules,
-            login_url=url_for("auth.login"),
-            signup_url=url_for("auth.signup"),
-        )
-
-    # -------------------------
-    # DASHBOARD redirect helper
-    # -------------------------
-    @app.route("/dashboard")
-    def dashboard():
+    def _session_role() -> str | None:
         """
-        1 centrale route om na login naartoe te sturen.
-        Op basis van session['role'] (docent/leerling) redirecten.
+        Ondersteunt:
+        - session["role"] = "docent"/"leerling" (oude stijl)
+        - session["user"] dict met role (nieuwe stijl)
         """
         role = session.get("role")
-        if role == "docent":
-            return redirect(url_for("docent.dashboard"))
-        if role == "leerling":
-            return redirect(url_for("leerling.dashboard"))
-        return redirect(url_for("auth.login"))
+        if role:
+            return role
+        u = session.get("user")
+        if isinstance(u, dict):
+            return u.get("role")
+        return None
 
-    # -------------------------
-    # REGISTER BLUEPRINTS
-    # -------------------------
-    app.register_blueprint(auth_bp)  # /login /signup /logout
-    app.register_blueprint(html_bp, url_prefix="/html")
-    app.register_blueprint(workbook_bp, url_prefix="/workbook")
-    app.register_blueprint(docent_bp, url_prefix="/docent")
-    app.register_blueprint(leerling_bp, url_prefix="/leerling")
-    app.register_blueprint(admin_bp, url_prefix="/admin")
+    def _is_admin() -> bool:
+        # als jij later admin netjes opslaat: pas dit aan
+        return bool(session.get("is_admin"))
+
+    # ---- globals voor templates ----
+    @app.context_processor
+    def inject_globals():
+        email = _session_user_email()
+        role = _session_role()
+        return {
+            "now_year": datetime.utcnow().year,
+            "current_user": {
+                "email": email,
+                "role": role,
+                "is_authenticated": bool(email),
+                "is_admin": _is_admin(),
+            },
+        }
+
+    # ---- Publieke landingspagina ----
+    @app.get("/")
+    def home():
+        # Hou dit bewust “simpel”: geen url_for hier,
+        # zodat home nooit crasht door endpoint-naam wijzigingen.
+        return render_template("public/home.html", page_title="Triade Tools")
+
+    # ---- Register blueprints ----
+    # auth: /login /logout /signup
+    app.register_blueprint(auth_bp)
+
+    # dashboards/toetsen
+    # (jouw routes laten zien: /docent/ en /leerling/)
+    app.register_blueprint(docent_bp)
+    app.register_blueprint(leerling_bp)
+
+    # tools
+    app.register_blueprint(html_bp)
+    app.register_blueprint(workbook_bp)
+
+    # admin
+    app.register_blueprint(admin_bp)
 
     return app
 
 
-# Gunicorn entrypoint
+# Gunicorn entrypoint verwacht "app"
 app = create_app()
 
+if __name__ == "__main__":
+    # lokaal debuggen
+    app.run(host="0.0.0.0", port=8501, debug=True)
 
