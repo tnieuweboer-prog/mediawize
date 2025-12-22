@@ -4,7 +4,7 @@ from __future__ import annotations
 from functools import wraps
 from flask import Blueprint, render_template, request, send_file, session, redirect, url_for
 
-from workbook_builder import build_workbook_docx_front_and_steps
+from .builder import build_workbook_docx_front_and_steps
 
 bp = Blueprint("workbook", __name__, url_prefix="/workbook")
 
