@@ -1,0 +1,31 @@
+{% extends "public_base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Account aanmaken</h1>
+  <p class="lead">Maak een account aan om de modules te gebruiken.</p>
+
+  {% if error %}
+    <p style="color:#b91c1c;font-weight:700">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST" class="form">
+    <label>E-mail</label>
+    <input type="email" name="email" required>
+
+    <label>Wachtwoord</label>
+    <input type="password" name="password" required minlength="8">
+
+    <label>Ik ben</label>
+    <select name="role">
+      <option value="docent" selected>Docent</option>
+      <option value="leerling">Leerling</option>
+    </select>
+
+    <button type="submit">Account aanmaken</button>
+  </form>
+
+  <p style="margin-top:14px;">
+    Heb je al een account? <a href="/login">Inloggen</a>
+  </p>
+</div>
+{% endblock %}
