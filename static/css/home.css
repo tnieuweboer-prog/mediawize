@@ -1,162 +1,384 @@
+/* =========================
+   0) Globale basis
+========================= */
 :root{
-  --bg:#0b1220;
-  --card: rgba(255,255,255,.06);
-  --card2: rgba(255,255,255,.08);
-  --text:#e6eefc;
-  --muted:#a9b7d0;
-  --border: rgba(255,255,255,.12);
-  --accent:#22c55e;
-  --accent2:#86efac;
+  --shadow: 0 18px 50px rgba(0,0,0,.35);
+  --radius: 18px;
 }
+
+*{ box-sizing:border-box; }
 
 body{
-  background:
-    radial-gradient(1200px 600px at 20% 10%, rgba(34,197,94,.18), transparent 55%),
-    radial-gradient(900px 500px at 70% 0%, rgba(134,239,172,.12), transparent 50%),
-    var(--bg);
-  color:var(--text);
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
+a{ color: inherit; }
+
+.container{
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+@media (max-width: 700px){
+  .container{ width: calc(100% - 28px); }
+}
+
+/* =========================
+   1) Secties en typografie
+========================= */
+section{
+  padding: 26px 0;
+}
+
+.section-head{
+  margin: 0 0 16px;
+}
+
+.section-head h2{
+  margin: 0 0 8px;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+}
+
+.section-head p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 70ch;
+}
+
+.sublead{
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 70ch;
+}
+
+/* =========================
+   2) Hero strakker
+========================= */
 .hero{
-  display:grid;
-  grid-template-columns: 1.15fr .85fr;
-  gap:28px;
-  margin-top:20px;
-}
-
-@media (max-width:900px){
-  .hero{ grid-template-columns:1fr; }
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-.brand-logo{
-  height:54px;
-  width:auto;
+  align-items: start;
+  padding-top: 6px;
 }
 
 .h1{
-  font-size:44px;
-  line-height:1.05;
-  margin:12px 0 0;
-  letter-spacing:-0.02em;
+  font-size: 46px;
 }
 
-.h1 .sub{
-  display:block;
-  font-size:16px;
-  margin-top:10px;
-  color:var(--muted);
-  font-weight:600;
+@media (max-width: 900px){
+  .h1{ font-size: 40px; }
 }
 
 .lead{
-  color:var(--muted);
-  font-size:16px;
-  line-height:1.6;
-  max-width:680px;
-  margin-top:14px;
+  margin-top: 12px;
 }
 
 .cta{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:18px;
+  margin-top: 16px;
 }
 
 .btn{
-  padding:12px 18px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  text-decoration:none;
-  font-weight:800;
-  color:var(--text);
-  background: rgba(255,255,255,.04);
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
 }
 
 .btn:hover{
-  background: rgba(255,255,255,.08);
+  transform: translateY(-1px);
 }
 
 .btn.primary{
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color:#06210f;
-  border-color:transparent;
+  box-shadow: 0 14px 30px rgba(34,197,94,.18);
 }
 
-.btn.ghost{
-  background:transparent;
-}
-
-.btn.link{
-  border-color:transparent;
-  color:var(--accent2);
-}
-
-.badges{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:16px;
-}
-
+/* badges iets rustiger */
 .badge{
-  padding:8px 12px;
-  border-radius:999px;
-  background: rgba(255,255,255,.06);
-  border:1px solid var(--border);
-  font-weight:700;
-  font-size:13px;
-  color:var(--muted);
+  color: var(--text);
+  opacity: .85;
 }
 
-.panel{
-  border:1px solid var(--border);
+/* =========================
+   3) Cards / grid (herbruikbaar)
+========================= */
+.card{
+  border: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-  border-radius:18px;
-  overflow:hidden;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
-.panel-top{
-  display:flex;
-  gap:8px;
-  padding:12px 14px;
-  border-bottom:1px solid rgba(255,255,255,.10);
+.grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 980px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+/* =========================
+   4) Trust blokken (links in hero)
+========================= */
+.trust{
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.trust-item{
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.12);
+  border-radius: 16px;
 }
 
-.dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background: rgba(255,255,255,.18);
+.trust-ico{
+  width: 34px;
+  height: 34px;
+  opacity: .95;
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,.25));
 }
 
-.panel-body{
-  padding:16px;
-  display:grid;
-  gap:12px;
+.trust-title{
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.trust-text{
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+/* =========================
+   5) Panel (rechter hero)
+========================= */
+.panel{
+  box-shadow: var(--shadow);
 }
 
 .mini-card{
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.10);
-  border-radius:14px;
-  padding:14px;
+  background: rgba(0,0,0,.14);
 }
 
-.mini-title{
-  font-weight:900;
-  margin-bottom:6px;
+.mini-preview{
+  margin-top: 6px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.12);
+  border-radius: 14px;
+  overflow: hidden;
 }
 
-.mini-text{
-  color:var(--muted);
-  font-size:14px;
+.preview-img{
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
+.preview-cap{
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 13px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+/* =========================
+   6) How (stappen)
+========================= */
+.how-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+@media (max-width: 980px){
+  .how-grid{ grid-template-columns: 1fr; }
+}
+
+.card.step{
+  padding: 18px;
+}
+
+.step-ico{
+  width: 38px;
+  height: 38px;
+  margin-bottom: 10px;
+  opacity: .95;
+}
+
+.card.step h3{
+  margin: 0 0 8px;
+}
+
+.card.step p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* =========================
+   7) Modules (gelijke hoogte + nette knoppen)
+========================= */
+.card.module{
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.module-top{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.module-ico{
+  width: 34px;
+  height: 34px;
+}
+
+.card.module h3{
+  margin: 0;
+}
+
+.card.module p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.list{
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--text);
+  opacity: .92;
+}
+
+.list li{
+  margin: 6px 0;
+}
+
+.card-actions{
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.btn.small{
+  padding: 10px 14px;
+  font-weight: 900;
+}
+
+.module-preview{
+  margin-top: 12px;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  display: block;
+  opacity: .95;
+}
+
+/* =========================
+   8) Info / Voor wie + admin note
+========================= */
+.card.wide{
+  padding: 20px;
+}
+
+.two{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+@media (max-width: 980px){
+  .two{ grid-template-columns: 1fr; }
+}
+
+.section h3{
+  margin: 0 0 8px;
+}
+
+.section p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.admin-note{
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.14);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   9) FAQ + final CTA
+========================= */
+.faq-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+@media (max-width: 980px){
+  .faq-grid{ grid-template-columns: 1fr; }
+}
+
+.card.faq-item{
+  padding: 18px;
+}
+
+.card.faq-item h3{
+  margin: 0 0 8px;
+}
+
+.card.faq-item p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.final-cta{
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(135deg, rgba(34,197,94,.14), rgba(255,255,255,.05));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.final-cta h3{
+  margin: 0 0 6px;
+}
+
+.final-cta p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.final-cta-actions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
