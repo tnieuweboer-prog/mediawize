@@ -1,143 +1,135 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, current_app
+# modules/core/auth.py
+from __future__ import annotations
+
+import json
 import os
-import sqlite3
+from pathlib import Path
+from typing import Any, Dict
+
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
-bp = Blueprint("auth", __name__)
+bp = Blueprint("auth", __name__, url_prefix="")
 
-# =========================
-# Database helpers
-# =========================
+# ---------- storage helpers ----------
+def _data_dir() -> Path:
+    # app.py zet app.config["DATA_DIR"] = "/opt/mediawize/data"
+    data_dir = current_app.config.get("DATA_DIR", "/opt/mediawize/data")
+    p = Path(data_dir)
+    p.mkdir(parents=True, exist_ok=True)
+    return p
 
-def _data_dir():
-    return current_app.config.get("DATA_DIR", os.path.join(os.getcwd(), "data"))
+def _users_path() -> Path:
+    return _data_dir() / "users.json"
 
-def _db_path():
-    os.makedirs(_data_dir(), exist_ok=True)
-    return os.path.join(_data_dir(), "app.db")
-
-def _get_conn():
-    conn = sqlite3.connect(_db_path())
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def init_db():
-    conn = _get_conn()
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'docent',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-@bp.before_app_request
-def ensure_db():
+def _load_users() -> Dict[str, Dict[str, Any]]:
+    """
+    Returns dict keyed by email.
+    Value example:
+    {
+      "email": "...",
+      "password_hash": "...",
+      "role": "docent" | "leerling",
+      "is_admin": bool
+    }
+    """
+    p = _users_path()
+    if not p.exists():
+        return {}
     try:
-        init_db()
+        return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
-        # bij import-fouten of migraties niet hard crashen
-        pass
+        # als bestand corrupt is, liever niet crashen
+        return {}
 
-# =========================
-# Login
-# =========================
+def _save_users(users: Dict[str, Dict[str, Any]]) -> None:
+    p = _users_path()
+    p.write_text(json.dumps(users, indent=2, ensure_ascii=False), encoding="utf-8")
 
-@bp.route("/login", methods=["GET", "POST"])
+def _normalize_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+# ---------- routes ----------
+@bp.get("/login")
 def login():
-    error = None
+    if session.get("user"):
+        # al ingelogd -> naar dashboard
+        if session.get("role") == "docent":
+            return redirect(url_for("docent.dashboard"))
+        if session.get("role") == "leerling":
+            return redirect(url_for("leerling.dashboard"))
+        return redirect(url_for("home"))
+    return render_template("auth/login.html", page_title="Inloggen")
 
-    if request.method == "POST":
-        email = (request.form.get("email") or "").strip().lower()
-        password = request.form.get("password") or ""
+@bp.post("/login")
+def login_post():
+    email = _normalize_email(request.form.get("email", ""))
+    password = request.form.get("password", "")
 
-        conn = _get_conn()
-        user = conn.execute(
-            "SELECT * FROM users WHERE email = ?",
-            (email,)
-        ).fetchone()
-        conn.close()
+    users = _load_users()
+    user = users.get(email)
 
-        if not user or not check_password_hash(user["password_hash"], password):
-            error = "Onjuiste e-mail of wachtwoord."
-        else:
-            session.clear()
-            session["user_id"] = user["id"]
-            session["email"] = user["email"]
-            session["role"] = user["role"]
+    if not user or not check_password_hash(user.get("password_hash", ""), password):
+        flash("Onjuiste inloggegevens.", "error")
+        return redirect(url_for("auth.login"))
 
-            if user["role"] == "docent":
-                return redirect("/docent/")
-            else:
-                return redirect("/leerling/")
+    # session vullen
+    session["user"] = user["email"]
+    session["role"] = user.get("role", "docent")
+    session["is_admin"] = bool(user.get("is_admin", False))
 
-    return render_template("auth/login.html", error=error)
+    # doorsturen
+    if session["role"] == "docent":
+        return redirect(url_for("docent.dashboard"))
+    return redirect(url_for("leerling.dashboard"))
 
-# =========================
-# Signup
-# =========================
-
-@bp.route("/signup", methods=["GET", "POST"])
+@bp.get("/signup")
 def signup():
-    error = None
+    if session.get("user"):
+        return redirect(url_for("home"))
+    return render_template("auth/signup.html", page_title="Account maken")
 
-    if request.method == "POST":
-        email = (request.form.get("email") or "").strip().lower()
-        password = request.form.get("password") or ""
-        role = (request.form.get("role") or "docent").lower()
+@bp.post("/signup")
+def signup_post():
+    email = _normalize_email(request.form.get("email", ""))
+    password = request.form.get("password", "")
+    role = (request.form.get("role") or "leerling").strip().lower()
 
-        if role not in ("docent", "leerling"):
-            role = "docent"
+    if role not in ("docent", "leerling"):
+        role = "leerling"
 
-        if not email or "@" not in email:
-            error = "Vul een geldig e-mailadres in."
-        elif len(password) < 8:
-            error = "Wachtwoord moet minimaal 8 tekens zijn."
-        else:
-            try:
-                pw_hash = generate_password_hash(password)
-                conn = _get_conn()
-                conn.execute(
-                    "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
-                    (email, pw_hash, role)
-                )
-                conn.commit()
+    if not email or "@" not in email:
+        flash("Vul een geldig e-mailadres in.", "error")
+        return redirect(url_for("auth.signup"))
 
-                user = conn.execute(
-                    "SELECT * FROM users WHERE email = ?",
-                    (email,)
-                ).fetchone()
-                conn.close()
+    if not password or len(password) < 6:
+        flash("Wachtwoord moet minimaal 6 tekens zijn.", "error")
+        return redirect(url_for("auth.signup"))
 
-                session.clear()
-                session["user_id"] = user["id"]
-                session["email"] = user["email"]
-                session["role"] = user["role"]
+    users = _load_users()
+    if email in users:
+        flash("Dit e-mailadres bestaat al. Log in.", "error")
+        return redirect(url_for("auth.login"))
 
-                if user["role"] == "docent":
-                    return redirect("/docent/")
-                else:
-                    return redirect("/leerling/")
+    users[email] = {
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "role": role,
+        "is_admin": False,
+    }
 
-            except sqlite3.IntegrityError:
-                error = "Dit e-mailadres bestaat al."
-            except Exception as e:
-                error = f"Fout bij registreren: {e}"
+    # eerste account automatisch admin maken (handig op een nieuwe installatie)
+    if len(users) == 1:
+        users[email]["is_admin"] = True
+        users[email]["role"] = "docent"
 
-    return render_template("auth/signup.html", error=error)
+    _save_users(users)
 
-# =========================
-# Logout
-# =========================
+    flash("Account aangemaakt. Je kunt nu inloggen.", "ok")
+    return redirect(url_for("auth.login"))
 
-@bp.route("/logout")
+@bp.get("/logout")
 def logout():
     session.clear()
-    return redirect("/")
-
+    return redirect(url_for("home"))
 
