@@ -7,7 +7,7 @@ from functools import wraps
 
 from flask import Blueprint, render_template, request, session, redirect, url_for
 
-from html_converter import docx_to_html
+from .converter import docx_to_html
 
 bp = Blueprint("html_tool", __name__, url_prefix="/html")
 
