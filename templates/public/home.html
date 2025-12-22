@@ -1,89 +1,107 @@
 {% extends "public_base.html" %}
 
 {% block content %}
+<section class="hero">
+  <div class="hero-left">
+    <div class="brand">
+      <img
+        src="{{ url_for('static', filename='assets/mediawize-logo.webp') }}"
+        alt="Mediawize"
+        class="brand-logo"
+      />
+    </div>
 
-<section style="display:grid; grid-template-columns:1fr; gap:32px;">
-
-  <!-- Hero -->
-  <div style="display:grid; grid-template-columns:1fr; gap:18px;">
-    <h1 style="font-size:2rem; line-height:1.2; margin:0;">
-      Digitale tools voor techniekonderwijs
+    <h1 class="h1">
+      Mediawize
+      <span class="sub">tools voor techniekonderwijs</span>
     </h1>
 
-    <p class="lead" style="max-width:720px;">
-      Triade Tools helpt docenten bij het maken van HTML-lessen, werkboekjes en
-      digitale toetsen. Leerlingen werken veilig en overzichtelijk binnen hun
-      eigen omgeving.
+    <p class="lead">
+      Maak snel en netjes lesmateriaal. Zet DOCX om naar HTML, genereer werkboekjes
+      en beheer digitale toetsen voor leerlingen in één omgeving.
     </p>
 
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <a href="{{ url_for('auth.login') }}"
-         style="background:#22c55e; color:white; text-decoration:none; padding:12px 20px; border-radius:999px; font-weight:800;">
-        Inloggen
-      </a>
+    <div class="cta">
+      <a class="btn primary" href="{{ url_for('auth.login_get') }}">Inloggen</a>
+      <a class="btn ghost" href="#modules">Bekijk modules</a>
+      <a class="btn link" href="{{ url_for('auth.signup_get') }}">Account maken</a>
+    </div>
 
-      <a href="#modules"
-         style="background:#e5e7eb; color:#0f172a; text-decoration:none; padding:12px 20px; border-radius:999px; font-weight:700;">
-        Bekijk modules
-      </a>
+    <div class="badges">
+      <div class="badge">DOCX → HTML</div>
+      <div class="badge">Werkboekjes</div>
+      <div class="badge">Toetsen</div>
+      <div class="badge">Docent & leerling</div>
     </div>
   </div>
 
-  <!-- Modules -->
-  <div id="modules" class="card">
-    <h2>Modules</h2>
-
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:16px;">
-
-      <div class="section">
-        <h3>DOCX → HTML</h3>
-        <p class="lead">
-          Zet Word-bestanden om naar nette HTML voor Stermonitor of LessonUp.
-        </p>
+  <div class="hero-right">
+    <div class="panel">
+      <div class="panel-top">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
       </div>
 
-      <div class="section">
-        <h3>Werkboekjes</h3>
-        <p class="lead">
-          Genereer gestructureerde werkboekjes met stappen, afbeeldingen en
-          materiaalstaten.
-        </p>
-      </div>
+      <div class="panel-body">
+        <div class="mini-card">
+          <div class="mini-title">DOCX → HTML</div>
+          <div class="mini-text">Stermonitor-ready output met afbeeldingen en koppen.</div>
+        </div>
 
-      <div class="section">
-        <h3>Toetsen</h3>
-        <p class="lead">
-          Docenten maken toetsen, leerlingen maken ze digitaal.
-          Inzendingen komen overzichtelijk terug bij de docent.
-        </p>
-      </div>
+        <div class="mini-card">
+          <div class="mini-title">Werkboekjes</div>
+          <div class="mini-text">Stappenplan, materialen, foto’s en export.</div>
+        </div>
 
+        <div class="mini-card">
+          <div class="mini-title">Toetsen</div>
+          <div class="mini-text">Aanmaken, afnemen, inzendingen terugkijken.</div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <!-- Rollen -->
-  <div class="card">
-    <h2>Voor wie?</h2>
-
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-top:16px;">
-
-      <div class="section">
-        <h3>Docenten</h3>
-        <p class="lead">
-          Maak lesmateriaal, beheer toetsen en download inzendingen.
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>Leerlingen</h3>
-        <p class="lead">
-          Maak toetsen online in een rustige en duidelijke omgeving.
-        </p>
-      </div>
-
-    </div>
-  </div>
-
 </section>
 
+<section id="modules" class="grid">
+  <div class="card">
+    <h2>DOCX → HTML</h2>
+    <p>Zet Word-bestanden om naar nette HTML voor Stermonitor of LessonUp.</p>
+    <div class="card-actions">
+      <a class="btn small" href="{{ url_for('html_tool.index_get') }}">Open module</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Werkboekjes</h2>
+    <p>Genereer gestructureerde werkboekjes met stappen, afbeeldingen en materiaalstaten.</p>
+    <div class="card-actions">
+      <a class="btn small" href="{{ url_for('workbook.index_get') }}">Open module</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Toetsen</h2>
+    <p>Docenten maken toetsen, leerlingen maken ze digitaal. Alles overzichtelijk terug.</p>
+    <div class="card-actions">
+      <a class="btn small" href="{{ url_for('toets_docent.index_get') }}">Docent</a>
+      <a class="btn small ghost" href="{{ url_for('toets_leerling.index_get') }}">Leerling</a>
+    </div>
+  </div>
+</section>
+
+<section class="info">
+  <div class="card wide">
+    <h2>Voor wie?</h2>
+    <div class="two">
+      <div class="section">
+        <h3>Docenten</h3>
+        <p>Maak lesmateriaal, beheer toetsen en download inzendingen.</p>
+      </div>
+      <div class="section">
+        <h3>Leerlingen</h3>
+        <p>Werk rustig en duidelijk in een eigen omgeving, zonder afleiding.</p>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}
+
