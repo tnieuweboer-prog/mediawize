@@ -15,7 +15,7 @@ def login_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not session.get("user"):
-            return redirect(url_for("auth.login_get"))
+            return redirect(url_for("auth.login"))
         return fn(*args, **kwargs)
     return wrapper
 
