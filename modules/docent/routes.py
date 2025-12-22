@@ -7,7 +7,7 @@ bp = Blueprint("docent", __name__, url_prefix="/docent")
 
 def _login_required_docent():
     if not session.get("user"):
-        return redirect(url_for("auth.login_get"))
+        return redirect(url_for("auth.login"))
     if session.get("role") != "docent":
         return redirect(url_for("home"))
     return None
