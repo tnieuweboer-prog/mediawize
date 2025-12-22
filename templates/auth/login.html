@@ -1,55 +1,74 @@
+{# templates/auth/login.html #}
 {% extends "public_base.html" %}
 
 {% block content %}
 
-<div style="max-width:420px; margin:0 auto;">
+<div class="card" style="max-width:520px; margin:0 auto;">
+  <h1 style="margin:0 0 10px 0;">Inloggen</h1>
+  <p class="lead" style="margin:0 0 18px 0;">
+    Log in met je account om naar je dashboard te gaan.
+  </p>
 
-  <div class="card">
-    <h1>Inloggen</h1>
-    <p class="lead">
-      Log in als docent of leerling om verder te gaan.
-    </p>
-
-    {% if error %}
-      <p style="color:#dc2626; font-weight:700; margin-top:12px;">
-        {{ error }}
-      </p>
+  {# Flash messages (als je flash gebruikt) #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="display:grid; gap:10px; margin:12px 0 16px 0;">
+        {% for category, message in messages %}
+          <div class="section"
+               style="border-left:6px solid #e5e7eb; padding:12px 14px;">
+            <strong style="display:block; margin-bottom:4px;">
+              {{ category|capitalize }}
+            </strong>
+            <div>{{ message }}</div>
+          </div>
+        {% endfor %}
+      </div>
     {% endif %}
+  {% endwith %}
 
-    <form method="post" action="{{ url_for('auth.login') }}" style="margin-top:16px;">
+  <form method="post" action="{{ url_for('auth.login') }}" style="margin-top:12px;">
+    <div style="display:grid; gap:12px;">
+      <label style="display:grid; gap:6px;">
+        <span style="font-weight:700;">E-mail</span>
+        <input
+          name="email"
+          type="email"
+          autocomplete="username"
+          required
+          placeholder="naam@school.nl"
+          style="width:100%; padding:12px 12px; border:1px solid #e5e7eb; border-radius:12px;"
+        />
+      </label>
 
-      <label for="email">E-mailadres</label>
-      <input
-        type="email"
-        id="email"
-        name="email"
-        type="password"
-        name="wachtwoord"
-        placeholder="naam@school.nl"
-        required
+      <label style="display:grid; gap:6px;">
+        <span style="font-weight:700;">Wachtwoord</span>
+        <input
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          placeholder="••••••••"
+          style="width:100%; padding:12px 12px; border:1px solid #e5e7eb; border-radius:12px;"
+        />
+      </label>
+
+      <button
+        type="submit"
+        style="background:#22c55e; color:white; border:none; padding:12px 16px; border-radius:999px; font-weight:800; cursor:pointer;"
       >
-
-      <label for="role" style="margin-top:14px;">Rol</label>
-      <select id="role" name="role" required>
-        <option value="">Kies een rol</option>
-        <option value="docent">Docent</option>
-        <option value="leerling">Leerling</option>
-      </select>
-
-      <button type="submit" style="width:100%; margin-top:18px;">
         Inloggen
       </button>
 
-    </form>
-
-    <div style="margin-top:18px; font-size:13px; color:#64748b;">
-      <p style="margin:0;">
-        Microsoft-login volgt later.<br>
-        Nu is dit een tijdelijke test-login.
-      </p>
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:6px;">
+        <a href="{{ url_for('auth.signup') }}" style="text-decoration:none; font-weight:700;">
+          Account aanmaken
+        </a>
+        <a href="{{ url_for('home') }}" style="text-decoration:none; font-weight:700;">
+          Terug naar home
+        </a>
+      </div>
     </div>
-  </div>
-
+  </form>
 </div>
 
 {% endblock %}
