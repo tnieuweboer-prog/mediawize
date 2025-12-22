@@ -1,3 +1,4 @@
+{# templates/public/home.html #}
 {% extends "public_base.html" %}
 
 {% block content %}
@@ -74,7 +75,7 @@
     <h2>Werkboekjes</h2>
     <p>Genereer gestructureerde werkboekjes met stappen, afbeeldingen en materiaalstaten.</p>
     <div class="card-actions">
-      <a class="btn small" href="{{ url_for('workbook.index_get') }}">Open module</a>
+      <a class="btn small" href="{{ url_for('workbook.workbook_get') }}">Open module</a>
     </div>
   </div>
 
@@ -82,8 +83,8 @@
     <h2>Toetsen</h2>
     <p>Docenten maken toetsen, leerlingen maken ze digitaal. Alles overzichtelijk terug.</p>
     <div class="card-actions">
-      <a class="btn small" href="{{ url_for('toets_docent.index_get') }}">Docent</a>
-      <a class="btn small ghost" href="{{ url_for('toets_leerling.index_get') }}">Leerling</a>
+      <a class="btn small" href="{{ url_for('docent.toetsen_overzicht') }}">Docent</a>
+      <a class="btn small ghost" href="{{ url_for('leerling.toets_maken') }}">Leerling</a>
     </div>
   </div>
 </section>
