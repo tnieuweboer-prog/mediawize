@@ -3,6 +3,12 @@
 
 <section class="hero">
   <div class="hero-left">
+
+    <!-- JOUW LOGO BOVENIN HERO (klein, netjes) -->
+    <div class="hero-brand">
+      <img src="{{ url_for('static', filename='assets/mediawize-logo.webp') }}" alt="Mediawize" class="hero-logo">
+    </div>
+
     <h1 class="h1">
       Mediawize
       <span class="sub">tools voor techniekonderwijs</span>
@@ -62,6 +68,16 @@
       </div>
 
       <div class="panel-body">
+
+        <!-- EXTRA HERO VISUAL (afbeelding 1) -->
+        <div class="hero-visual">
+          <img
+            src="{{ url_for('static', filename='assets/images/home-hero-wide.webp') }}"
+            alt="Voorbeeld homepage"
+            class="hero-visual-img"
+          />
+        </div>
+
         <div class="mini-card">
           <div class="mini-title">DOCX → HTML</div>
           <div class="mini-text">Stermonitor-ready output met afbeeldingen en koppen.</div>
@@ -77,14 +93,16 @@
           <div class="mini-text">Aanmaken, afnemen, inzendingen terugkijken.</div>
         </div>
 
+        <!-- EXTRA PREVIEW (afbeelding 2) -->
         <div class="mini-preview">
           <img
-            src="{{ url_for('static', filename='assets/preview-dashboard.webp') }}"
+            src="{{ url_for('static', filename='assets/images/dashboard-mock.webp') }}"
             alt="Voorbeeld dashboard"
             class="preview-img"
           />
           <div class="preview-cap">Voorbeeld: overzicht voor docent</div>
         </div>
+
       </div>
     </div>
   </div>
@@ -257,4 +275,3 @@
 </section>
 
 {% endblock %}
-
