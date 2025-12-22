@@ -14,6 +14,7 @@ from modules.html_tool.routes import bp as html_bp
 from modules.workbook.routes import bp as workbook_bp
 from modules.admin.routes import bp as admin_bp
 
+app.config["DATA_DIR"] = "/opt/mediawize/data"
 
 def create_app() -> Flask:
     app = Flask(__name__, static_folder="static", template_folder="templates")
