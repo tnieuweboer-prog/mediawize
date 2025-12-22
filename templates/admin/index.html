@@ -1,1 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>Beheer</h1>
+  <p class="lead">
+    Dit is de beheerdersomgeving. Hier gaan we straks modules aan/uit zetten voor docenten.
+  </p>
+
+  <div class="section">
+    <h3>Status</h3>
+    <p class="lead" style="margin:8px 0 0 0;">
+      Beheerfunctionaliteit staat nu nog in “basis”-modus. Volgende stap is een modulelijst met schakelaars
+      (feature flags) die wordt opgeslagen in JSON in je data-map.
+    </p>
+  </div>
+
+  <div class="section">
+    <h3>Volgende stap</h3>
+    <ul style="margin:10px 0 0 18px;">
+      <li>Modules overzicht (HTML, Werkboek, Toetsen)</li>
+      <li>Toggle per module (aan/uit)</li>
+      <li>Opslag in <code>data/feature_flags.json</code></li>
+      <li>Menu verbergt automatisch modules die uit staan</li>
+    </ul>
+  </div>
+
+</div>
+
+{% endblock %}
 
