@@ -13,7 +13,7 @@ from modules.toetsen.docent_routes import bp as docent_bp
 from modules.toetsen.leerling_routes import bp as leerling_bp
 from modules.html_tool.routes import bp as html_bp
 from modules.workbook.routes import bp as workbook_bp
-from modules.admin.routes import bp as admin_bp
+from protected.admin import admin_bp
 
 
 def create_app() -> Flask:
