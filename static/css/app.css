@@ -1,12 +1,24 @@
 :root{
+  /* Mediawize basis */
+  --bg: #f6faf7;
+  --card: rgba(255,255,255,.88);
+  --text:#0f172a;
+  --muted:#475569;
+
+  --border: rgba(15, 23, 42, .10);
+  --border2: rgba(15, 23, 42, .14);
+
+  /* Accent */
+  --accent:#22c55e;
+  --accent2:#86efac;
+
+  /* Sidebar (afgeleid, niet afwijkend) */
   --sidebar:#0f172a;
   --sidebar-text:#e5e7eb;
-  --accent:#22c55e;
-  --bg:#f1f5f9;
-  --card:#ffffff;
-  --border:#e5e7eb;
-  --text:#0f172a;
-  --muted:#64748b;
+
+  /* Extra */
+  --shadow: 0 14px 40px rgba(2, 6, 23, .08);
+  --radius: 18px;
 }
 
 *{ box-sizing:border-box; }
@@ -108,10 +120,10 @@ body{
 
 .card{
   background:var(--card);
-  border-radius:18px;
+  border-radius:var(--radius);
   border:1px solid var(--border);
   padding:24px;
-  max-width:1150px;
+  box-shadow: var(--shadow);
 }
 
 @media (max-width: 900px){
