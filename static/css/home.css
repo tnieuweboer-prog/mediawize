@@ -341,3 +341,74 @@ header .brand-logo{
   height: 40px; /* pas aan: 36-44 is mooi */
   width: auto;
 }
+
+/* =========================
+   SPLIT SECTION: MODULES + HOW
+========================= */
+
+.split-section{
+  margin: 64px 0;
+}
+
+.split-grid{
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.split-col h2{
+  margin-bottom: 8px;
+}
+
+.section-intro{
+  color: var(--muted);
+  max-width: 420px;
+  margin-bottom: 24px;
+}
+
+.split-image{
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  display: block;
+  margin-top: 16px;
+}
+
+/* Steps rechts */
+.steps{
+  display: grid;
+  gap: 16px;
+}
+
+.step-card{
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+
+.step-card img{
+  width: 32px;
+  height: 32px;
+  margin-top: 2px;
+}
+
+.step-card strong{
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Responsive */
+@media (max-width: 900px){
+  .split-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .split-image{
+    max-width: 100%;
+  }
+}
