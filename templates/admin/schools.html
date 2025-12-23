@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% set page_title = "Scholen" %}
+{% set active_tab = "admin" %}
+
+{% block content %}
+
+<h1>Scholen</h1>
+<p class="intro-text">Beheer scholen en stel basisbranding in.</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div style="margin:12px 0;">
+      {% for category, msg in messages %}
+        <div class="alert {{ category }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="row" style="align-items:start;">
+
+  <div class="card">
+    <h2 style="margin-top:0;">School toevoegen</h2>
+
+    <form method="post" action="/admin/schools">
+      <label>Naam</label>
+      <input type="text" name="name" required>
+
+      <label>Slug (uniek)</label>
+      <input type="text" name="slug" placeholder="bijv. triade">
+
+      <div class="row">
+        <div>
+          <label>Primaire kleur</label>
+          <input type="text" name="primary_color" placeholder="#22c55e">
+        </div>
+        <div>
+          <label>Secundaire kleur</label>
+          <input type="text" name="secondary_color" placeholder="#86efac">
+        </div>
+      </div>
+
+      <button type="submit">School toevoegen</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">Bestaande scholen</h2>
+
+    {% if schools %}
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        {% for s in schools %}
+          <div class="school-row">
+            <div style="font-weight:900;">{{ s.name }}</div>
+            <div style="color:var(--muted); font-size:13px;">slug: {{ s.slug }}</div>
+            <div style="color:var(--muted); font-size:13px;">
+              kleuren: {{ s.primary_color }} / {{ s.secondary_color }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--muted); margin:0;">Nog geen scholen.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}
