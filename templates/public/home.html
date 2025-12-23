@@ -67,42 +67,56 @@
   </div>
 </section>
 
-<!-- ================= AFBEELDING 2: DASHBOARD (BREED, HORIZONTAAL) ================= -->
-<section class="hero-image" aria-label="Voorbeeld dashboard">
-  <img
-    src="{{ url_for('static', filename='assets/images/dashboard.webp') }}"
-    alt="Dashboard overzicht van Mediawize"
-    class="hero-img-wide"
-  />
+<section class="split-section" id="how-modules">
+
+  <div class="split-grid">
+
+    <!-- LINKS: MODULES -->
+    <div class="split-col">
+      <h2>Modules</h2>
+      <p class="section-intro">
+        Alles in één plek. Kies wat je nodig hebt, zonder dat je je workflow hoeft om te gooien.
+      </p>
+
+      <img
+        src="{{ url_for('static', filename='assets/images/dashboard.webp') }}"
+        alt="Overzicht modules"
+        class="split-image"
+      />
+    </div>
+
+    <!-- RECHTS: ZO WERKT HET -->
+    <div class="split-col">
+      <h2>Zo werkt het</h2>
+      <p class="section-intro">
+        Drie stappen, zonder gedoe. Je kunt vandaag al beginnen.
+      </p>
+
+      <div class="steps">
+        <div class="step-card">
+          <img src="{{ url_for('static', filename='assets/icons/upload.webp') }}" alt="">
+          <strong>1. Upload</strong>
+          <p>Upload je Word-bestand of materiaal.</p>
+        </div>
+
+        <div class="step-card">
+          <img src="{{ url_for('static', filename='assets/icons/wand.webp') }}" alt="">
+          <strong>2. Genereer</strong>
+          <p>Kies de module en krijg nette output met vaste opmaak.</p>
+        </div>
+
+        <div class="step-card">
+          <img src="{{ url_for('static', filename='assets/icons/download.webp') }}" alt="">
+          <strong>3. Gebruik</strong>
+          <p>Kopieer naar Stermonitor, download je werkboek of neem een toets af.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
 </section>
 
-<!-- ================= HOW ================= -->
-<section class="how" id="how">
-  <div class="section-head">
-    <h2>Zo werkt het</h2>
-    <p>Drie stappen, zonder gedoe. Je kunt vandaag al beginnen.</p>
-  </div>
-
-  <div class="how-grid">
-    <div class="card step">
-      <img class="step-ico" src="{{ url_for('static', filename='assets/icons/upload.webp') }}" alt="">
-      <h3>1. Upload</h3>
-      <p>Upload je Word-bestand of materiaal. Mediawize haalt structuur, koppen en afbeeldingen eruit.</p>
-    </div>
-
-    <div class="card step">
-      <img class="step-ico" src="{{ url_for('static', filename='assets/icons/wand.webp') }}" alt="">
-      <h3>2. Genereer</h3>
-      <p>Kies de module. Je krijgt nette output met vaste opmaak: consistent en duidelijk voor leerlingen.</p>
-    </div>
-
-    <div class="card step">
-      <img class="step-ico" src="{{ url_for('static', filename='assets/icons/download.webp') }}" alt="">
-      <h3>3. Gebruik</h3>
-      <p>Kopieer naar Stermonitor/LessonUp, download je werkboek, of neem een toets af en bekijk inzendingen.</p>
-    </div>
-  </div>
-</section>
 
 <!-- ================= MODULES ================= -->
 <section id="modules" class="modules">
