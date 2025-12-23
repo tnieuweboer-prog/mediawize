@@ -180,13 +180,15 @@ label{
   margin-top:12px;
 }
 
-input[type="text"], input[type="password"], textarea, select, input[type="file"]{
+input[type="text"], input[type="email"], input[type="password"], textarea, select, input[type="file"]{
   width:100%;
-  padding:12px 12px;
-  border-radius:12px;
+  padding:14px 14px;
+  border-radius:14px;
   border:1px solid var(--border);
   margin-top:6px;
-  font-size:16px; /* voorkomt iOS zoom */
+  font-size:16px;
+  background: rgba(255,255,255,.85);
+  color: var(--text);
 }
 
 button{
