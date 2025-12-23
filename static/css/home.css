@@ -343,72 +343,91 @@ header .brand-logo{
 }
 
 /* =========================
-   SPLIT SECTION: MODULES + HOW
+   SPLIT SECTION: MODULES + HOW (strakker)
 ========================= */
 
 .split-section{
-  margin: 64px 0;
+  margin: 56px 0;
 }
 
 .split-grid{
   display: grid;
-  grid-template-columns: 1.1fr .9fr;
-  gap: 48px;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 40px;
   align-items: start;
 }
 
+/* Titles iets compacter */
 .split-col h2{
-  margin-bottom: 8px;
+  margin: 0 0 10px;
 }
 
 .section-intro{
   color: var(--muted);
-  max-width: 420px;
-  margin-bottom: 24px;
+  max-width: 52ch;
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+
+/* Links: afbeelding hoger + minder zweven */
+.split-image-wrap{
+  margin-top: 18px;
 }
 
 .split-image{
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
   height: auto;
   display: block;
-  margin-top: 16px;
 }
 
-/* Steps rechts */
+/* Rechts: stappen compacter en strakker */
 .steps{
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  margin-top: 18px;
 }
 
 .step-card{
-  background: #ffffff;
+  background: rgba(255,255,255,.86);
+  border: 1px solid rgba(15,23,42,.10);
   border-radius: 16px;
-  padding: 18px;
-  display: flex;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 42px 1fr;
   gap: 14px;
-  align-items: flex-start;
-  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  align-items: center;
+  box-shadow: 0 10px 26px rgba(2,6,23,.05);
 }
 
 .step-card img{
-  width: 32px;
-  height: 32px;
-  margin-top: 2px;
+  width: 34px;
+  height: 34px;
+  display: block;
 }
 
+/* Titel + tekst binnen kaart */
 .step-card strong{
   display: block;
-  margin-bottom: 4px;
+  margin: 0 0 3px;
+  font-size: 18px;
 }
 
-/* Responsive */
+.step-card p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+/* Mobiel: onder elkaar, image eerst, stappen daarna */
 @media (max-width: 900px){
   .split-grid{
     grid-template-columns: 1fr;
+    gap: 28px;
   }
 
   .split-image{
     max-width: 100%;
   }
 }
+
