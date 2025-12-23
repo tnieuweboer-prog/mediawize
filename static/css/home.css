@@ -286,3 +286,59 @@ header .brand-logo{
   display:block;
 }
 
+/* =========================
+   PUBLIC BASE LAYOUT
+========================= */
+.public-header{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px 0;
+}
+
+.public-header-inner{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.public-main{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.public-footer{
+  max-width: 1200px;
+  margin: 40px auto 20px;
+  padding: 0 20px;
+  color: #64748b; /* iets vriendelijker dan het oude blauwgrijs */
+}
+
+.public-footer-inner{
+  display:flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.public-footer-links{
+  display:flex;
+  gap: 14px;
+}
+
+.public-footer-links a{
+  color: #64748b;
+  text-decoration: none;
+}
+
+.public-footer-links a:hover{
+  text-decoration: underline;
+}
+
+/* Logo groter in navbar */
+header .brand-logo{
+  height: 40px; /* pas aan: 36-44 is mooi */
+  width: auto;
+}
