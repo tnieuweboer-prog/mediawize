@@ -40,7 +40,7 @@ a{ color: inherit; }
    HEADER LOGO (kleiner & rustiger)
 ========================= */
 header .brand-logo{
-  height: 28px;          /* was te groot */
+  height: 42px;          /* was te groot */
   width: auto;
   opacity: .95;
 }
