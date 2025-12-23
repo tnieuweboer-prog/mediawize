@@ -1,21 +1,5 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>{{ page_title if page_title else "Mediawize" }}</title>
-
-  <!-- Basis styles -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-  <!-- Home / public styles -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-
-</head>
-<body>
-
-  <!-- ================= HEADER ================= -->
-  <header style="max-width:1200px; margin:0 auto; padding:20px 20px 0;">
+<header class="topbar" style="max-width:1200px; margin:0 auto; padding:20px 20px 0;">
+  <div class="nav-row" style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
     <div class="brand">
       <img
         src="{{ url_for('static', filename='assets/mediawize-logo.webp') }}"
@@ -23,27 +7,11 @@
         class="brand-logo"
       />
     </div>
-  </header>
 
-  <!-- ================= MAIN ================= -->
-  <main style="max-width:1200px; margin:0 auto; padding:32px 20px;">
-    {% block content %}{% endblock %}
-  </main>
-
-  <!-- ================= FOOTER ================= -->
-  <footer style="max-width:1200px; margin:40px auto 20px; padding:0 20px; color:#94a3b8;">
-    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-      <div>
-        © {{ now_year }} Mediawize
-      </div>
-
-      <div style="display:flex; gap:14px;">
-        <a href="/" style="color:#94a3b8; text-decoration:none;">Home</a>
-        <a href="{{ url_for('auth.login') }}" style="color:#94a3b8; text-decoration:none;">Inloggen</a>
-      </div>
+    <div class="nav-actions">
+      <a class="btn ghost" href="{{ url_for('auth.login') }}">Inloggen</a>
+      <a class="btn primary" href="{{ url_for('auth.signup') }}">Account maken</a>
     </div>
-  </footer>
-
-</body>
-</html>
+  </div>
+</header>
 
