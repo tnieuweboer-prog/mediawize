@@ -12,9 +12,10 @@
   --accent:#22c55e;
   --accent2:#86efac;
 
-  /* Sidebar (afgeleid, niet afwijkend) */
-  --sidebar:#0f172a;
-  --sidebar-text:#e5e7eb;
+  /* Mediawize groen donker */
+  --sidebar: #0b2f1f;        /* donkergroen, niet blauw */
+  --sidebar-2: #082517;      /* iets dieper voor gradient */
+  --sidebar-text: #eafaf1;
 
   /* Extra */
   --shadow: 0 14px 40px rgba(2, 6, 23, .08);
@@ -87,12 +88,16 @@ body{
 .sidebar{
   width:280px;
   background:
-    linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+    linear-gradient(180deg,
+      var(--sidebar) 0%,
+      var(--sidebar-2) 100%
+    );
   color:var(--sidebar-text);
   padding:18px;
   display:flex;
   flex-direction:column;
 }
+
 
 
 .logo{
@@ -117,10 +122,13 @@ body{
   font-weight:600;
 }
 .nav a.active{
-  background: rgba(34,197,94,.18);
-  color: #ffffff;
- }
-.nav a:hover{ background:rgba(255,255,255,0.08); }
+  background: rgba(134,239,172,.22); /* accent2 */
+  color:#0b2f1f;
+}
+
+.nav a:hover{
+  background: rgba(255,255,255,.10);
+}
 
 .sidebar-footer{
   margin-top:auto;
