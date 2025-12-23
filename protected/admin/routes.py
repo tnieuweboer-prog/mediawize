@@ -1,31 +1,57 @@
 # protected/admin/routes.py
-from flask import render_template
+import os
+from flask import render_template, request, redirect, url_for, session, flash
 from . import admin_bp
+from .decorators import admin_required
 
-# ---------------------------------------------------------
-# ROUTE MAP (admin)
-# ---------------------------------------------------------
-# GET  /admin                          -> Admin dashboard (overzicht)
-# GET  /admin/schools                   -> Scholen lijst
-# GET  /admin/schools/new               -> Nieuwe school formulier
-# POST /admin/schools/new               -> School aanmaken
-# GET  /admin/schools/<id>              -> School details (tabs: gegevens/branding/inrichting/tools)
-# POST /admin/schools/<id>/save         -> School opslaan
+# --------------------------------------------
+# Admin credentials via Environment Variables
+# --------------------------------------------
+# Zet deze op je VPS, NIET in je code/repo:
+#   ADMIN_EMAIL=...
+#   ADMIN_PASSWORD=...
 #
-# GET  /admin/teachers                  -> Docenten lijst
-# GET  /admin/teachers/new              -> Nieuwe docent formulier
-# POST /admin/teachers/new              -> Docent aanmaken
-# GET  /admin/teachers/<id>             -> Docent details + tool overrides
-# POST /admin/teachers/<id>/save        -> Docent opslaan
-#
-# GET  /admin/tools                     -> Tools catalogus
-# GET  /admin/tools/<key>               -> Tool detail (status/omschrijving)
-# POST /admin/tools/<key>/save          -> Tool opslaan
-#
-# (optioneel later)
-# GET  /admin/system                    -> Logs/versie/maintenance
-# ---------------------------------------------------------
+# (In stap 2B maken we dit netter met hash+DB, maar dit is veilig als env vars goed staan.)
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 
+@admin_bp.get("/login")
+def admin_login():
+    # als je al ingelogd bent, ga door
+    if session.get("is_admin") is True:
+        return redirect(url_for("admin.admin_dashboard"))
+
+    next_url = request.args.get("next") or url_for("admin.admin_dashboard")
+    return render_template("login.html", next_url=next_url)
+
+@admin_bp.post("/login")
+def admin_login_post():
+    email = (request.form.get("email") or "").strip().lower()
+    password = request.form.get("password") or ""
+    next_url = request.form.get("next_url") or url_for("admin.admin_dashboard")
+
+    if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+        flash("Admin login is nog niet geconfigureerd op de server.", "error")
+        return redirect(url_for("admin.admin_login"))
+
+    if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+        session.clear()
+        session["is_admin"] = True
+        session["admin_email"] = email
+        return redirect(next_url)
+
+    flash("Onjuiste inloggegevens.", "error")
+    return redirect(url_for("admin.admin_login", next=next_url))
+
+@admin_bp.get("/logout")
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin.admin_login"))
+
+@admin_bp.get("/")
+@admin_required
+def admin_dashboard():
+    return render_template("dashboard.html")
 
 @admin_bp.get("/")
 def admin_dashboard():
