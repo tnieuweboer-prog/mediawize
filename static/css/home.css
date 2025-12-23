@@ -1,17 +1,12 @@
 :root{
-  /* Licht en vriendelijk */
   --bg: #f6faf7;
-  --surface: rgba(255,255,255,.92);
   --card: rgba(255,255,255,.88);
-  --card2: rgba(255,255,255,.96);
-
   --text:#0f172a;
   --muted:#475569;
 
   --border: rgba(15, 23, 42, .10);
   --border2: rgba(15, 23, 42, .14);
 
-  /* Accent groen */
   --accent:#22c55e;
   --accent2:#86efac;
 
@@ -34,40 +29,77 @@ body{
 
 a{ color: inherit; }
 
-/* =========================
-   HEADER LOGO KLEINER
-========================= */
-header .brand-logo{
-  height: 28px;   /* kleiner */
-  width: auto;
-  opacity: .95;
-}
-
-/* =========================
-   SECTIES
-========================= */
 section{ padding: 34px 0; }
 @media (max-width:900px){ section{ padding: 26px 0; } }
 
-.section-head{ margin: 0 0 14px; }
-.section-head h2{
-  margin: 0 0 8px;
-  font-size: 28px;
-  letter-spacing: -0.01em;
+/* =========================
+   NAVBAR (logo groter + knoppen rechts)
+   (markup staat in public_base.html)
+========================= */
+header .brand-logo{
+  height: 38px; /* groter dan 28 */
+  width: auto;
+  opacity: .98;
 }
-.section-head p{
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.65;
-  max-width: 70ch;
+
+/* knoppen in navbar */
+.nav-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.btn{
+  padding:12px 18px;
+  border-radius:999px;
+  border: 1px solid var(--border);
+  text-decoration:none;
+  font-weight: 800;
+  color: var(--text);
+  background: rgba(255,255,255,.80);
+  box-shadow: 0 10px 24px rgba(2,6,23,.05);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+}
+.btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(2,6,23,.08);
+  border-color: var(--border2);
+}
+.btn.primary{
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #06210f;
+  border-color: transparent;
+}
+.btn.ghost{
+  background: rgba(255,255,255,.55);
+}
+.btn.outline{
+  background: transparent;
+  border-color: rgba(15,23,42,.18);
+  box-shadow: none;
+}
+.btn.small{
+  padding: 10px 14px;
+  font-weight: 850;
 }
 
 /* =========================
-   HERO (HORIZONTAAL)
+   HERO SPLIT (tekst links, laptop rechts)
 ========================= */
-.hero-horizontal{
-  display:block;
-  margin-top: 18px;
+.hero-split{
+  display:grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 26px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+@media (max-width: 980px){
+  .hero-split{
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
 }
 
 .hero-text{
@@ -105,49 +137,39 @@ section{ padding: 34px 0; }
   margin-top: 10px;
 }
 
-/* CTA */
-.cta{
+/* laptop rechts */
+.hero-media{
   display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top: 18px;
+  justify-content: flex-end;
+}
+@media (max-width: 980px){
+  .hero-media{ justify-content: center; }
 }
 
-.btn{
-  padding:12px 18px;
-  border-radius:999px;
-  border: 1px solid var(--border);
-  text-decoration:none;
-  font-weight: 800;
-  color: var(--text);
-  background: rgba(255,255,255,.80);
-  box-shadow: 0 10px 24px rgba(2,6,23,.05);
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
-}
-.btn:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(2,6,23,.08);
-  border-color: var(--border2);
-}
-.btn.primary{
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #06210f;
-  border-color: transparent;
-}
-.btn.ghost{
-  background: rgba(255,255,255,.55);
-}
-.btn.outline{
-  background: transparent;
-  border-color: rgba(15,23,42,.18);
-  box-shadow: none;
-}
-.btn.small{
-  padding: 10px 14px;
-  font-weight: 850;
+.hero-img{
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  display:block;
 }
 
-/* Badges */
+/* dashboard breed (horizontaal onder trust) */
+.hero-image{
+  margin: 46px 0;
+  display:flex;
+  justify-content:center;
+}
+.hero-img-wide{
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  display:block;
+}
+@media (max-width:900px){
+  .hero-image{ margin: 30px 0; }
+}
+
+/* badges */
 .badges{
   display:flex;
   gap:10px;
@@ -165,37 +187,13 @@ section{ padding: 34px 0; }
 }
 
 /* =========================
-   HERO AFBEELDINGEN (HORIZONTAAL)
+   TRUST (horizontaal)
 ========================= */
-.hero-image{
-  margin: 46px 0;
-  display:flex;
-  justify-content:center;
-}
-
-.hero-img{
-  width: 100%;
-  max-width: 980px;
-  height: auto;
-  display:block;
-}
-
-@media (max-width:900px){
-  .hero-image{ margin: 30px 0; }
-  .hero-img{ max-width: 100%; }
-}
-
-/* =========================
-   TRUST (HORIZONTAAL)
-========================= */
-.trust-wrap{ padding-top: 0; }
-
 .trust{
   display:grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
-
 @media (max-width:980px){
   .trust{ grid-template-columns: 1fr; }
 }
@@ -214,15 +212,15 @@ section{ padding: 34px 0; }
 
 .trust-ico{ width: 34px; height: 34px; }
 .trust-title{ font-weight: 900; margin-bottom: 4px; }
-.trust-text{
-  color: var(--muted);
-  font-size: 14.5px;
-  line-height: 1.6;
-}
+.trust-text{ color: var(--muted); font-size: 14.5px; line-height: 1.6; }
 
 /* =========================
    CARDS / GRIDS
 ========================= */
+.section-head{ margin: 0 0 14px; }
+.section-head h2{ margin: 0 0 8px; font-size: 28px; letter-spacing: -0.01em; }
+.section-head p{ margin: 0; color: var(--muted); line-height: 1.65; max-width: 70ch; }
+
 .card{
   border: 1px solid var(--border);
   background: rgba(255,255,255,.82);
@@ -287,64 +285,4 @@ section{ padding: 34px 0; }
   border: 1px solid var(--border);
   display:block;
 }
-
-/* =========================
-   INFO
-========================= */
-.card.wide{ padding: 22px; }
-.muted{ color: var(--muted); }
-
-.two{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-top: 14px;
-}
-@media (max-width:980px){ .two{ grid-template-columns: 1fr; } }
-
-.admin-note{
-  margin-top: 16px;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.72);
-  display:flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* =========================
-   FAQ
-========================= */
-.faq-grid{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 12px;
-}
-@media (max-width:980px){ .faq-grid{ grid-template-columns: 1fr; } }
-
-.card.faq-item{ padding: 20px; }
-.card.faq-item h3{ margin: 0 0 8px; }
-.card.faq-item p{ margin: 0; color: var(--muted); line-height: 1.7; }
-
-/* =========================
-   FINAL CTA
-========================= */
-.final-cta{
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: linear-gradient(135deg, rgba(34,197,94,.14), rgba(255,255,255,.78));
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.final-cta h3{ margin: 0 0 6px; }
-.final-cta p{ margin: 0; color: var(--muted); line-height: 1.65; }
-.final-cta-actions{ display:flex; gap: 10px; flex-wrap:wrap; }
 
