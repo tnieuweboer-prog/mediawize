@@ -106,7 +106,7 @@ body{
   margin-bottom:24px;
 }
 .logo img{
-  width:100px; height:30px;
+  width:150px; height:50px;
   border-radius:12px;
   background: rgba(255,255,255,.92);
   backdrop-filter: blur(4px);
