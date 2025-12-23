@@ -1,8 +1,8 @@
 {% extends "public_base.html" %}
 {% block content %}
 
-<!-- ================= HERO (HORIZONTAAL) ================= -->
-<section class="hero hero-horizontal">
+<!-- ================= HERO (TEKST LINKS + LAPTOP RECHTS) ================= -->
+<section class="hero hero-split">
 
   <div class="hero-text">
     <h1 class="h1">
@@ -19,12 +19,7 @@
       Minder knip-en-plak, meer tijd voor je les. Alles overzichtelijk, veilig en klaar voor gebruik.
     </p>
 
-    <div class="cta">
-      <a class="btn primary" href="{{ url_for('auth.login') }}">Inloggen</a>
-      <a class="btn ghost" href="#modules">Bekijk modules</a>
-      <a class="btn outline" href="{{ url_for('auth.signup') }}">Account maken</a>
-    </div>
-
+    <!-- CTA IS WEG: badges komen hoger -->
     <div class="badges">
       <div class="badge">DOCX → HTML</div>
       <div class="badge">Werkboekjes</div>
@@ -33,15 +28,14 @@
     </div>
   </div>
 
-</section>
+  <div class="hero-media">
+    <img
+      src="{{ url_for('static', filename='assets/hero-laptop.webp') }}"
+      alt="Laptop met Mediawize modules"
+      class="hero-img"
+    />
+  </div>
 
-<!-- ================= AFBEELDING 1: LAPTOP ================= -->
-<section class="hero-image" aria-label="Voorbeeld laptop">
-  <img
-    src="{{ url_for('static', filename='assets/images/laptop.webp') }}"
-    alt="Laptop met Mediawize modules"
-    class="hero-img"
-  />
 </section>
 
 <!-- ================= TRUST (HORIZONTAAL) ================= -->
@@ -73,12 +67,12 @@
   </div>
 </section>
 
-<!-- ================= AFBEELDING 2: DASHBOARD ================= -->
+<!-- ================= AFBEELDING 2: DASHBOARD (BREED, HORIZONTAAL) ================= -->
 <section class="hero-image" aria-label="Voorbeeld dashboard">
   <img
-    src="{{ url_for('static', filename='assets/images/dashboard.webp') }}"
+    src="{{ url_for('static', filename='assets/hero-dashboard.webp') }}"
     alt="Dashboard overzicht van Mediawize"
-    class="hero-img"
+    class="hero-img-wide"
   />
 </section>
 
@@ -176,80 +170,6 @@
         <a class="btn small ghost" href="{{ url_for('leerling.dashboard') }}">Leerling</a>
       </div>
       <img class="module-preview" src="{{ url_for('static', filename='assets/preview-tests.webp') }}" alt="Voorbeeld toetsen">
-    </div>
-  </div>
-</section>
-
-<!-- ================= INFO ================= -->
-<section class="info">
-  <div class="card wide">
-    <h2>Voor wie?</h2>
-    <p class="muted">
-      Mediawize is gebouwd voor techniekonderwijs: helder, praktisch en zonder poespas.
-    </p>
-
-    <div class="two">
-      <div class="section">
-        <h3>Docenten</h3>
-        <p>
-          Maak lesmateriaal sneller, beheer toetsen centraal en download inzendingen zonder losse mapjes
-          of eindeloze mailtjes.
-        </p>
-      </div>
-      <div class="section">
-        <h3>Leerlingen</h3>
-        <p>
-          Een rustige omgeving met duidelijke stappen. Minder afleiding, meer focus.
-          Toetsen en opdrachten zijn overzichtelijk en veilig.
-        </p>
-      </div>
-    </div>
-
-    <div class="admin-note">
-      <strong>Admin</strong>
-      <span>Beheer rollen en toegang via het adminpaneel.</span>
-      <a class="btn small ghost" href="{{ url_for('admin.index') }}">Open admin</a>
-    </div>
-  </div>
-</section>
-
-<!-- ================= FAQ ================= -->
-<section class="faq" id="faq">
-  <div class="section-head">
-    <h2>Veelgestelde vragen</h2>
-    <p>Kort en duidelijk, zodat je meteen weet wat je krijgt.</p>
-  </div>
-
-  <div class="faq-grid">
-    <div class="card faq-item">
-      <h3>Kan ik meteen een account maken?</h3>
-      <p>Ja. Klik op “Account maken”. Daarna kun je inloggen en je rol kiezen (docent/leerling).</p>
-    </div>
-
-    <div class="card faq-item">
-      <h3>Werkt dit met Stermonitor?</h3>
-      <p>De HTML-output is gemaakt om netjes te plakken in Stermonitor of te gebruiken in LessonUp.</p>
-    </div>
-
-    <div class="card faq-item">
-      <h3>Waar blijven mijn bestanden?</h3>
-      <p>Alles blijft binnen de omgeving. Docenten houden overzicht, leerlingen zien alleen wat nodig is.</p>
-    </div>
-
-    <div class="card faq-item">
-      <h3>Kan ik dit ook op mobiel gebruiken?</h3>
-      <p>Ja, de interface is responsief. Op desktop werkt het het prettigst voor bouwen en beheren.</p>
-    </div>
-  </div>
-
-  <div class="final-cta">
-    <div>
-      <h3>Klaar om te starten?</h3>
-      <p>Maak een account aan en probeer de modules. Binnen een paar minuten heb je je eerste output.</p>
-    </div>
-    <div class="final-cta-actions">
-      <a class="btn primary" href="{{ url_for('auth.signup') }}">Account maken</a>
-      <a class="btn ghost" href="{{ url_for('auth.login') }}">Inloggen</a>
     </div>
   </div>
 </section>
