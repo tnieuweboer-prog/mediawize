@@ -15,34 +15,42 @@
 <body>
 
   <!-- ================= HEADER ================= -->
-  <header style="max-width:1200px; margin:0 auto; padding:20px 20px 0;">
-    <div class="brand">
-      <img
-        src="{{ url_for('static', filename='assets/mediawize-logo.webp') }}"
-        alt="Mediawize"
-        class="brand-logo"
-      />
+  <header class="public-header">
+    <div class="public-header-inner">
+
+      <div class="brand">
+        <img
+          src="{{ url_for('static', filename='assets/mediawize-logo.webp') }}"
+          alt="Mediawize"
+          class="brand-logo"
+        />
+      </div>
+
+      <nav class="nav-actions" aria-label="Navigatie">
+        <a class="btn ghost" href="{{ url_for('auth.login') }}">Inloggen</a>
+        <a class="btn primary" href="{{ url_for('auth.signup') }}">Account maken</a>
+      </nav>
+
     </div>
   </header>
 
   <!-- ================= MAIN ================= -->
-  <main style="max-width:1200px; margin:0 auto; padding:32px 20px;">
+  <main class="public-main">
     {% block content %}{% endblock %}
   </main>
 
   <!-- ================= FOOTER ================= -->
-  <footer style="max-width:1200px; margin:40px auto 20px; padding:0 20px; color:#94a3b8;">
-    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-      <div>
-        © {{ now_year }} Mediawize
-      </div>
+  <footer class="public-footer">
+    <div class="public-footer-inner">
+      <div>© {{ now_year }} Mediawize</div>
 
-      <div style="display:flex; gap:14px;">
-        <a href="/" style="color:#94a3b8; text-decoration:none;">Home</a>
-        <a href="{{ url_for('auth.login') }}" style="color:#94a3b8; text-decoration:none;">Inloggen</a>
+      <div class="public-footer-links">
+        <a href="/">Home</a>
+        <a href="{{ url_for('auth.login') }}">Inloggen</a>
       </div>
     </div>
   </footer>
 
 </body>
 </html>
+
