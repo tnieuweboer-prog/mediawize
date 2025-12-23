@@ -1,0 +1,42 @@
+<!-- templates/admin/login.html -->
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mediawize Admin login</title>
+  </head>
+  <body style="font-family: system-ui; padding: 24px; max-width: 420px;">
+    <h1>Admin login</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="margin: 12px 0;">
+          {% for category, msg in messages %}
+            <div style="padding:10px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px;">
+              {{ msg }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('admin.admin_login_post') }}">
+      <input type="hidden" name="next_url" value="{{ next_url }}"/>
+
+      <label style="display:block;margin-top:12px;">E-mail</label>
+      <input name="email" type="email" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;"/>
+
+      <label style="display:block;margin-top:12px;">Wachtwoord</label>
+      <input name="password" type="password" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;"/>
+
+      <button type="submit" style="margin-top:16px;padding:10px 14px;border:1px solid #ddd;border-radius:10px;cursor:pointer;">
+        Inloggen
+      </button>
+    </form>
+
+    <p style="margin-top:14px;opacity:.7;">
+      Alleen voor beheer.
+    </p>
+  </body>
+</html>
