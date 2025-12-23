@@ -29,7 +29,7 @@ body{
 
 a{ color: inherit; }
 
-section{ padding: 34px 0; }
+section{ padding: 14px 0; }
 @media (max-width:900px){ section{ padding: 26px 0; } }
 
 /* =========================
