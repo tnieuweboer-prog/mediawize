@@ -100,7 +100,10 @@ body{
   color:var(--sidebar-text);
   font-weight:600;
 }
-.nav a.active{ background:rgba(34,197,94,0.25); }
+.nav a.active{
+  background: rgba(34,197,94,.18);
+  color: #ffffff;
+ }
 .nav a:hover{ background:rgba(255,255,255,0.08); }
 
 .sidebar-footer{
