@@ -1,272 +1,350 @@
-{% extends "public_base.html" %}
-{% block content %}
+:root{
+  /* Licht en vriendelijk */
+  --bg: #f6faf7;
+  --surface: rgba(255,255,255,.92);
+  --card: rgba(255,255,255,.88);
+  --card2: rgba(255,255,255,.96);
 
-<section class="hero">
-  <div class="hero-left">
+  --text:#0f172a;
+  --muted:#475569;
 
-    <h1 class="h1">
-      Mediawize
-      <span class="sub">tools voor techniekonderwijs</span>
-    </h1>
+  --border: rgba(15, 23, 42, .10);
+  --border2: rgba(15, 23, 42, .14);
 
-    <p class="lead">
-      Maak snel en netjes lesmateriaal. Zet DOCX om naar HTML, genereer werkboekjes
-      en beheer digitale toetsen voor leerlingen in één omgeving.
-    </p>
+  /* Accent groen */
+  --accent:#22c55e;
+  --accent2:#86efac;
 
-    <p class="sublead">
-      Minder knip-en-plak, meer tijd voor je les. Alles overzichtelijk, veilig en klaar voor gebruik.
-    </p>
+  --shadow: 0 14px 40px rgba(2, 6, 23, .08);
+  --radius: 18px;
+}
 
-    <div class="cta">
-      <a class="btn primary" href="{{ url_for('auth.login') }}">Inloggen</a>
-      <a class="btn ghost" href="#modules">Bekijk modules</a>
-      <a class="btn outline" href="{{ url_for('auth.signup') }}">Account maken</a>
-    </div>
+*{ box-sizing:border-box; }
 
-    <div class="trust">
-      <div class="trust-item">
-        <img class="trust-ico" src="{{ url_for('static', filename='assets/icons/shield.webp') }}" alt="">
-        <div>
-          <div class="trust-title">Veilig</div>
-          <div class="trust-text">Leerlingen werken in hun eigen omgeving. Docenten houden overzicht.</div>
-        </div>
-      </div>
-      <div class="trust-item">
-        <img class="trust-ico" src="{{ url_for('static', filename='assets/icons/lightning.webp') }}" alt="">
-        <div>
-          <div class="trust-title">Snel</div>
-          <div class="trust-text">Van Word naar bruikbare output in minuten, inclusief structuur.</div>
-        </div>
-      </div>
-      <div class="trust-item">
-        <img class="trust-ico" src="{{ url_for('static', filename='assets/icons/multitab.webp') }}" alt="">
-        <div>
-          <div class="trust-title">Stermonitor-ready</div>
-          <div class="trust-text">Netjes opgemaakt, consistent en makkelijk te plaatsen.</div>
-        </div>
-      </div>
-    </div>
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1100px 600px at 20% 0%, rgba(34,197,94,.18), transparent 55%),
+    radial-gradient(900px 520px at 80% 10%, rgba(134,239,172,.20), transparent 55%),
+    radial-gradient(800px 520px at 60% 90%, rgba(34,197,94,.10), transparent 60%),
+    var(--bg);
+}
 
-    <div class="badges">
-      <div class="badge">DOCX → HTML</div>
-      <div class="badge">Werkboekjes</div>
-      <div class="badge">Toetsen</div>
-      <div class="badge">Docent & leerling</div>
-    </div>
-  </div>
+a{ color: inherit; }
 
-  <div class="hero-right">
-    <div class="panel">
-      <div class="panel-top">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      </div>
+/* =========================
+   HEADER LOGO KLEINER
+========================= */
+header .brand-logo{
+  height: 28px;   /* kleiner */
+  width: auto;
+  opacity: .95;
+}
 
-      <div class="panel-body">
+/* =========================
+   SECTIES
+========================= */
+section{ padding: 34px 0; }
+@media (max-width:900px){ section{ padding: 26px 0; } }
 
-        <!-- EXTRA HERO VISUAL (afbeelding 1) -->
-        <div class="hero-visual">
-          <img
-            src="{{ url_for('static', filename='assets/images/home-hero-wide.webp') }}"
-            alt="Voorbeeld homepage"
-            class="hero-visual-img"
-          />
-        </div>
+.section-head{ margin: 0 0 14px; }
+.section-head h2{
+  margin: 0 0 8px;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+}
+.section-head p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 70ch;
+}
 
-        <div class="mini-card">
-          <div class="mini-title">DOCX → HTML</div>
-          <div class="mini-text">Stermonitor-ready output met afbeeldingen en koppen.</div>
-        </div>
+/* =========================
+   HERO (HORIZONTAAL)
+========================= */
+.hero-horizontal{
+  display:block;
+  margin-top: 18px;
+}
 
-        <div class="mini-card">
-          <div class="mini-title">Werkboekjes</div>
-          <div class="mini-text">Stappenplan, materialen, foto’s en export naar DOCX.</div>
-        </div>
+.hero-text{
+  max-width: 760px;
+}
 
-        <div class="mini-card">
-          <div class="mini-title">Toetsen</div>
-          <div class="mini-text">Aanmaken, afnemen, inzendingen terugkijken.</div>
-        </div>
+.h1{
+  font-size: 44px;
+  line-height: 1.06;
+  margin: 8px 0 0;
+  letter-spacing: -0.02em;
+}
+@media (max-width:900px){ .h1{ font-size: 38px; } }
 
-        <!-- EXTRA PREVIEW (afbeelding 2) -->
-        <div class="mini-preview">
-          <img
-            src="{{ url_for('static', filename='assets/images/dashboard-mock.webp') }}"
-            alt="Voorbeeld dashboard"
-            class="preview-img"
-          />
-          <div class="preview-cap">Voorbeeld: overzicht voor docent</div>
-        </div>
+.h1 .sub{
+  display:block;
+  font-size: 15px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-weight: 700;
+}
 
-      </div>
-    </div>
-  </div>
-</section>
+.lead{
+  color: var(--muted);
+  font-size: 15.5px;
+  line-height: 1.75;
+  max-width: 70ch;
+  margin-top: 12px;
+}
+.sublead{
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.75;
+  max-width: 70ch;
+  margin-top: 10px;
+}
 
-<section class="how" id="how">
-  <div class="section-head">
-    <h2>Zo werkt het</h2>
-    <p>Drie stappen, zonder gedoe. Je kunt vandaag al beginnen.</p>
-  </div>
+/* CTA */
+.cta{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 18px;
+}
 
-  <div class="how-grid">
-    <div class="card step">
-      <img class="step-ico" src="{{ url_for('static', filename='assets/icons/upload.webp') }}" alt="">
-      <h3>1. Upload</h3>
-      <p>Upload je Word-bestand of materiaal. Mediawize haalt structuur, koppen en afbeeldingen eruit.</p>
-    </div>
-    <div class="card step">
-      <img class="step-ico" src="{{ url_for('static', filename='assets/icons/wand.webp') }}" alt="">
-      <h3>2. Genereer</h3>
-      <p>Kies de module. Je krijgt nette output met vaste opmaak: consistent en duidelijk voor leerlingen.</p>
-    </div>
-    <div class="card step">
-      <img class="step-ico" src="{{ url_for('static', filename='assets/icons/download.webp') }}" alt="">
-      <h3>3. Gebruik</h3>
-      <p>Kopieer naar Stermonitor/LessonUp, download je werkboek, of neem een toets af en bekijk inzendingen.</p>
-    </div>
-  </div>
-</section>
+.btn{
+  padding:12px 18px;
+  border-radius:999px;
+  border: 1px solid var(--border);
+  text-decoration:none;
+  font-weight: 800;
+  color: var(--text);
+  background: rgba(255,255,255,.80);
+  box-shadow: 0 10px 24px rgba(2,6,23,.05);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+}
+.btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(2,6,23,.08);
+  border-color: var(--border2);
+}
+.btn.primary{
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #06210f;
+  border-color: transparent;
+}
+.btn.ghost{
+  background: rgba(255,255,255,.55);
+}
+.btn.outline{
+  background: transparent;
+  border-color: rgba(15,23,42,.18);
+  box-shadow: none;
+}
+.btn.small{
+  padding: 10px 14px;
+  font-weight: 850;
+}
 
-<section id="modules" class="modules">
-  <div class="section-head">
-    <h2>Modules</h2>
-    <p>Alles in één plek. Kies wat je nodig hebt, zonder dat je je workflow hoeft om te gooien.</p>
-  </div>
+/* Badges */
+.badges{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 18px;
+}
+.badge{
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid var(--border);
+  font-weight: 800;
+  font-size: 13px;
+  color: rgba(15,23,42,.78);
+}
 
-  <div class="grid">
-    <div class="card module">
-      <div class="module-top">
-        <img class="module-ico" src="{{ url_for('static', filename='assets/icons/converter.webp') }}" alt="">
-        <h3>DOCX → HTML</h3>
-      </div>
-      <p>
-        Zet Word om naar nette HTML met koppen, tussenkoppen, tabellen en afbeeldingen.
-        Ideaal voor Stermonitor of LessonUp.
-      </p>
-      <ul class="list">
-        <li>Consistente opmaak</li>
-        <li>Afbeeldingen netjes geplaatst</li>
-        <li>Direct te kopiëren</li>
-      </ul>
-      <div class="card-actions">
-        <a class="btn small" href="{{ url_for('html_tool.index_get') }}">Open module</a>
-      </div>
-      <img class="module-preview" src="{{ url_for('static', filename='assets/preview-html.webp') }}" alt="Voorbeeld HTML output">
-    </div>
+/* =========================
+   HERO AFBEELDINGEN (HORIZONTAAL)
+========================= */
+.hero-image{
+  margin: 46px 0;
+  display:flex;
+  justify-content:center;
+}
 
-    <div class="card module">
-      <div class="module-top">
-        <img class="module-ico" src="{{ url_for('static', filename='assets/icons/settings.webp') }}" alt="">
-        <h3>Werkboekjes</h3>
-      </div>
-      <p>
-        Genereer een werkboek met duidelijke stappen, materialen, afbeeldingen en ruimte voor antwoorden.
-        Handig voor praktijkopdrachten.
-      </p>
-      <ul class="list">
-        <li>Stappenplan + checklists</li>
-        <li>Materialenlijst</li>
-        <li>Export naar DOCX</li>
-      </ul>
-      <div class="card-actions">
-        <a class="btn small" href="{{ url_for('workbook.workbook_get') }}">Open module</a>
-      </div>
-      <img class="module-preview" src="{{ url_for('static', filename='assets/preview-workbook.webp') }}" alt="Voorbeeld werkboek">
-    </div>
+.hero-img{
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  display:block;
+}
 
-    <div class="card module">
-      <div class="module-top">
-        <img class="module-ico" src="{{ url_for('static', filename='assets/icons/mobile.webp') }}" alt="">
-        <h3>Toetsen</h3>
-      </div>
-      <p>
-        Docenten maken toetsen, leerlingen maken ze digitaal. Inzendingen en resultaten blijven overzichtelijk bij elkaar.
-      </p>
-      <ul class="list">
-        <li>Docent-overzicht</li>
-        <li>Leerling-omgeving</li>
-        <li>Terugkijken en beheren</li>
-      </ul>
-      <div class="card-actions">
-        <a class="btn small" href="{{ url_for('docent.dashboard') }}">Docent</a>
-        <a class="btn small ghost" href="{{ url_for('leerling.dashboard') }}">Leerling</a>
-      </div>
-      <img class="module-preview" src="{{ url_for('static', filename='assets/preview-tests.webp') }}" alt="Voorbeeld toetsen">
-    </div>
-  </div>
-</section>
+@media (max-width:900px){
+  .hero-image{ margin: 30px 0; }
+  .hero-img{ max-width: 100%; }
+}
 
-<section class="info">
-  <div class="card wide">
-    <h2>Voor wie?</h2>
-    <p class="muted">
-      Mediawize is gebouwd voor techniekonderwijs: helder, praktisch en zonder poespas.
-    </p>
+/* =========================
+   TRUST (HORIZONTAAL)
+========================= */
+.trust-wrap{ padding-top: 0; }
 
-    <div class="two">
-      <div class="section">
-        <h3>Docenten</h3>
-        <p>
-          Maak lesmateriaal sneller, beheer toetsen centraal en download inzendingen zonder losse mapjes
-          of eindeloze mailtjes.
-        </p>
-      </div>
-      <div class="section">
-        <h3>Leerlingen</h3>
-        <p>
-          Een rustige omgeving met duidelijke stappen. Minder afleiding, meer focus.
-          Toetsen en opdrachten zijn overzichtelijk en veilig.
-        </p>
-      </div>
-    </div>
+.trust{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
 
-    <div class="admin-note">
-      <strong>Admin</strong>
-      <span>Beheer rollen en toegang via het adminpaneel.</span>
-      <a class="btn small ghost" href="{{ url_for('admin.index') }}">Open admin</a>
-    </div>
-  </div>
-</section>
+@media (max-width:980px){
+  .trust{ grid-template-columns: 1fr; }
+}
 
-<section class="faq" id="faq">
-  <div class="section-head">
-    <h2>Veelgestelde vragen</h2>
-    <p>Kort en duidelijk, zodat je meteen weet wat je krijgt.</p>
-  </div>
+.trust-item{
+  display:grid;
+  grid-template-columns: 38px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.78);
+  border-radius: 18px;
+  box-shadow: 0 10px 26px rgba(2,6,23,.05);
+}
 
-  <div class="faq-grid">
-    <div class="card faq-item">
-      <h3>Kan ik meteen een account maken?</h3>
-      <p>Ja. Klik op “Account maken”. Daarna kun je inloggen en je rol kiezen (docent/leerling).</p>
-    </div>
+.trust-ico{ width: 34px; height: 34px; }
+.trust-title{ font-weight: 900; margin-bottom: 4px; }
+.trust-text{
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
 
-    <div class="card faq-item">
-      <h3>Werkt dit met Stermonitor?</h3>
-      <p>De HTML-output is gemaakt om netjes te plakken in Stermonitor of te gebruiken in LessonUp.</p>
-    </div>
+/* =========================
+   CARDS / GRIDS
+========================= */
+.card{
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.82);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 26px rgba(2,6,23,.05);
+}
 
-    <div class="card faq-item">
-      <h3>Waar blijven mijn bestanden?</h3>
-      <p>Alles blijft binnen de omgeving. Docenten houden overzicht, leerlingen zien alleen wat nodig is.</p>
-    </div>
+.grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+@media (max-width:980px){ .grid{ grid-template-columns:1fr; } }
 
-    <div class="card faq-item">
-      <h3>Kan ik dit ook op mobiel gebruiken?</h3>
-      <p>Ja, de interface is responsief. Op desktop werkt het het prettigst voor bouwen en beheren.</p>
-    </div>
-  </div>
+.how-grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 12px;
+}
+@media (max-width:980px){ .how-grid{ grid-template-columns:1fr; } }
 
-  <div class="final-cta">
-    <div>
-      <h3>Klaar om te starten?</h3>
-      <p>Maak een account aan en probeer de modules. Binnen een paar minuten heb je je eerste output.</p>
-    </div>
-    <div class="final-cta-actions">
-      <a class="btn primary" href="{{ url_for('auth.signup') }}">Account maken</a>
-      <a class="btn ghost" href="{{ url_for('auth.login') }}">Inloggen</a>
-    </div>
-  </div>
-</section>
+.card.step{ padding: 20px; }
+.step-ico{ width: 38px; height: 38px; margin-bottom: 10px; }
+.card.step h3{ margin: 0 0 8px; }
+.card.step p{ margin: 0; color: var(--muted); line-height: 1.7; }
 
-{% endblock %}
+.card.module{
+  padding: 20px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+.module-top{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.module-ico{ width: 34px; height: 34px; }
+.card.module h3{ margin: 0; }
+.card.module p{ margin: 0; color: var(--muted); line-height: 1.7; }
+
+.list{
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: rgba(15,23,42,.85);
+}
+.list li{ margin: 6px 0; }
+
+.card-actions{
+  margin-top:auto;
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.module-preview{
+  margin-top: 14px;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  display:block;
+}
+
+/* =========================
+   INFO
+========================= */
+.card.wide{ padding: 22px; }
+.muted{ color: var(--muted); }
+
+.two{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 14px;
+}
+@media (max-width:980px){ .two{ grid-template-columns: 1fr; } }
+
+.admin-note{
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.72);
+  display:flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   FAQ
+========================= */
+.faq-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 12px;
+}
+@media (max-width:980px){ .faq-grid{ grid-template-columns: 1fr; } }
+
+.card.faq-item{ padding: 20px; }
+.card.faq-item h3{ margin: 0 0 8px; }
+.card.faq-item p{ margin: 0; color: var(--muted); line-height: 1.7; }
+
+/* =========================
+   FINAL CTA
+========================= */
+.final-cta{
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(34,197,94,.14), rgba(255,255,255,.78));
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.final-cta h3{ margin: 0 0 6px; }
+.final-cta p{ margin: 0; color: var(--muted); line-height: 1.65; }
+.final-cta-actions{ display:flex; gap: 10px; flex-wrap:wrap; }
+
