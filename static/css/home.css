@@ -37,6 +37,20 @@ body{
 a{ color: inherit; }
 
 /* =========================
+   HEADER LOGO (kleiner & rustiger)
+========================= */
+header .brand-logo{
+  height: 28px;          /* was te groot */
+  width: auto;
+  opacity: .95;
+}
+
+header{
+  padding-top: 16px;
+  padding-bottom: 6px;
+}
+
+/* =========================
    HERO
 ========================= */
 .hero{
