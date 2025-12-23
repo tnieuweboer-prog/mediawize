@@ -11,7 +11,7 @@
   --border: rgba(15, 23, 42, .10);
   --border2: rgba(15, 23, 42, .14);
 
-  /* Accent groen (jouw stijl) */
+  /* Accent groen */
   --accent:#22c55e;
   --accent2:#86efac;
 
@@ -25,8 +25,6 @@ body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
-
-  /* zachte groene gloed, geen zwart */
   background:
     radial-gradient(1100px 600px at 20% 0%, rgba(34,197,94,.18), transparent 55%),
     radial-gradient(900px 520px at 80% 10%, rgba(134,239,172,.20), transparent 55%),
@@ -37,51 +35,52 @@ body{
 a{ color: inherit; }
 
 /* =========================
-   HEADER LOGO (kleiner & rustiger)
+   HEADER LOGO KLEINER
 ========================= */
 header .brand-logo{
-  height: 42px;          /* was te groot */
+  height: 28px;   /* kleiner */
   width: auto;
   opacity: .95;
 }
 
-header{
-  padding-top: 16px;
-  padding-bottom: 6px;
+/* =========================
+   SECTIES
+========================= */
+section{ padding: 34px 0; }
+@media (max-width:900px){ section{ padding: 26px 0; } }
+
+.section-head{ margin: 0 0 14px; }
+.section-head h2{
+  margin: 0 0 8px;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+}
+.section-head p{
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 70ch;
 }
 
 /* =========================
-   HERO
+   HERO (HORIZONTAAL)
 ========================= */
-.hero{
-  display:grid;
-  grid-template-columns: 1.12fr .88fr;
-  gap: 34px;
-  margin-top: 10px;
-  align-items: start;
+.hero-horizontal{
+  display:block;
+  margin-top: 18px;
 }
 
-@media (max-width:900px){
-  .hero{ grid-template-columns:1fr; gap: 18px; }
+.hero-text{
+  max-width: 760px;
 }
 
-.hero-brand{ margin-bottom: 10px; }
-.hero-logo{
-  height: 34px;
-  width: auto;
-}
-
-/* typografie vriendelijker */
 .h1{
   font-size: 44px;
   line-height: 1.06;
   margin: 8px 0 0;
   letter-spacing: -0.02em;
 }
-
-@media (max-width:900px){
-  .h1{ font-size: 38px; }
-}
+@media (max-width:900px){ .h1{ font-size: 38px; } }
 
 .h1 .sub{
   display:block;
@@ -98,7 +97,6 @@ header{
   max-width: 70ch;
   margin-top: 12px;
 }
-
 .sublead{
   color: var(--muted);
   font-size: 15px;
@@ -126,42 +124,36 @@ header{
   box-shadow: 0 10px 24px rgba(2,6,23,.05);
   transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
 }
-
 .btn:hover{
   transform: translateY(-1px);
   box-shadow: 0 14px 30px rgba(2,6,23,.08);
   border-color: var(--border2);
 }
-
 .btn.primary{
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   color: #06210f;
   border-color: transparent;
 }
-
 .btn.ghost{
   background: rgba(255,255,255,.55);
 }
-
 .btn.outline{
   background: transparent;
   border-color: rgba(15,23,42,.18);
   box-shadow: none;
 }
-
 .btn.small{
   padding: 10px 14px;
   font-weight: 850;
 }
 
-/* badges */
+/* Badges */
 .badges{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
   margin-top: 18px;
 }
-
 .badge{
   padding: 8px 12px;
   border-radius: 999px;
@@ -172,11 +164,40 @@ header{
   color: rgba(15,23,42,.78);
 }
 
-/* trust */
+/* =========================
+   HERO AFBEELDINGEN (HORIZONTAAL)
+========================= */
+.hero-image{
+  margin: 46px 0;
+  display:flex;
+  justify-content:center;
+}
+
+.hero-img{
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  display:block;
+}
+
+@media (max-width:900px){
+  .hero-image{ margin: 30px 0; }
+  .hero-img{ max-width: 100%; }
+}
+
+/* =========================
+   TRUST (HORIZONTAAL)
+========================= */
+.trust-wrap{ padding-top: 0; }
+
 .trust{
-  margin-top: 22px;
   display:grid;
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width:980px){
+  .trust{ grid-template-columns: 1fr; }
 }
 
 .trust-item{
@@ -184,7 +205,6 @@ header{
   grid-template-columns: 38px 1fr;
   gap: 12px;
   align-items: start;
-
   padding: 16px;
   border: 1px solid var(--border);
   background: rgba(255,255,255,.78);
@@ -192,16 +212,8 @@ header{
   box-shadow: 0 10px 26px rgba(2,6,23,.05);
 }
 
-.trust-ico{
-  width: 34px;
-  height: 34px;
-}
-
-.trust-title{
-  font-weight: 900;
-  margin-bottom: 4px;
-}
-
+.trust-ico{ width: 34px; height: 34px; }
+.trust-title{ font-weight: 900; margin-bottom: 4px; }
 .trust-text{
   color: var(--muted);
   font-size: 14.5px;
@@ -209,107 +221,8 @@ header{
 }
 
 /* =========================
-   PANEL (rechts)
+   CARDS / GRIDS
 ========================= */
-.panel{
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.78);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
-
-.panel-top{
-  display:flex;
-  gap:8px;
-  padding:12px 14px;
-  border-bottom:1px solid var(--border);
-  background: rgba(248,250,252,.95);
-}
-
-.dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background: rgba(15,23,42,.18);
-}
-
-.panel-body{
-  padding: 18px;
-  display:grid;
-  gap: 14px;
-}
-
-.hero-visual{
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.90);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.hero-visual-img{
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.mini-card{
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.88);
-  border-radius: 14px;
-  padding: 14px;
-}
-
-.mini-title{
-  font-weight: 950;
-  margin-bottom: 6px;
-}
-
-.mini-text{
-  color: var(--muted);
-  font-size: 14.5px;
-  line-height: 1.55;
-}
-
-.mini-preview{
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.88);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.preview-img{
-  width:100%;
-  height:auto;
-  display:block;
-}
-
-.preview-cap{
-  padding: 10px 12px;
-  color: var(--muted);
-  font-size: 13px;
-  border-top: 1px solid var(--border);
-}
-
-/* =========================
-   SECTIES / GRID / CARDS
-========================= */
-section{ padding: 34px 0; }
-@media (max-width:900px){ section{ padding: 26px 0; } }
-
-.section-head{ margin: 0 0 14px; }
-.section-head h2{
-  margin: 0 0 8px;
-  font-size: 28px;
-  letter-spacing: -0.01em;
-}
-.section-head p{
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.65;
-  max-width: 70ch;
-}
-
 .card{
   border: 1px solid var(--border);
   background: rgba(255,255,255,.82);
@@ -322,9 +235,7 @@ section{ padding: 34px 0; }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
-@media (max-width:980px){
-  .grid{ grid-template-columns:1fr; }
-}
+@media (max-width:980px){ .grid{ grid-template-columns:1fr; } }
 
 .how-grid{
   display:grid;
@@ -332,9 +243,7 @@ section{ padding: 34px 0; }
   gap: 18px;
   margin-top: 12px;
 }
-@media (max-width:980px){
-  .how-grid{ grid-template-columns:1fr; }
-}
+@media (max-width:980px){ .how-grid{ grid-template-columns:1fr; } }
 
 .card.step{ padding: 20px; }
 .step-ico{ width: 38px; height: 38px; margin-bottom: 10px; }
@@ -379,7 +288,9 @@ section{ padding: 34px 0; }
   display:block;
 }
 
-/* info */
+/* =========================
+   INFO
+========================= */
 .card.wide{ padding: 22px; }
 .muted{ color: var(--muted); }
 
@@ -403,7 +314,9 @@ section{ padding: 34px 0; }
   flex-wrap: wrap;
 }
 
-/* faq */
+/* =========================
+   FAQ
+========================= */
 .faq-grid{
   display:grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -416,7 +329,9 @@ section{ padding: 34px 0; }
 .card.faq-item h3{ margin: 0 0 8px; }
 .card.faq-item p{ margin: 0; color: var(--muted); line-height: 1.7; }
 
-/* final */
+/* =========================
+   FINAL CTA
+========================= */
 .final-cta{
   margin-top: 24px;
   padding: 20px;
