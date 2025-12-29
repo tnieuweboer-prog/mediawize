@@ -6,11 +6,13 @@
 {% block content %}
 
 <h1>Scholen</h1>
-<p class="intro-text">Beheer scholen en stel basisbranding in.</p>
+<p class="intro-text">
+  Beheer scholen en stel branding, logo en basisinstellingen in.
+</p>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div style="margin:12px 0;">
+    <div style="margin:14px 0;">
       {% for category, msg in messages %}
         <div class="alert {{ category }}">{{ msg }}</div>
       {% endfor %}
@@ -18,14 +20,17 @@
   {% endif %}
 {% endwith %}
 
-<div class="row" style="align-items:start;">
+<div class="row" style="align-items:flex-start;">
 
+  <!-- ===================================== -->
+  <!-- School toevoegen -->
+  <!-- ===================================== -->
   <div class="card">
     <h2 style="margin-top:0;">School toevoegen</h2>
 
     <form method="post" action="/admin/schools">
       <label>Naam</label>
-      <input type="text" name="name" required>
+      <input type="text" name="name" placeholder="Bijv. SG De Triade" required>
 
       <label>Slug (uniek)</label>
       <input type="text" name="slug" placeholder="bijv. triade">
@@ -45,26 +50,67 @@
     </form>
   </div>
 
+  <!-- ===================================== -->
+  <!-- Bestaande scholen -->
+  <!-- ===================================== -->
   <div class="card">
     <h2 style="margin-top:0;">Bestaande scholen</h2>
 
     {% if schools %}
-      <div style="display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+
         {% for s in schools %}
           <div class="school-row">
-            <div style="font-weight:900;">{{ s.name }}</div>
-            <div style="color:var(--muted); font-size:13px;">slug: {{ s.slug }}</div>
-            <div style="color:var(--muted); font-size:13px;">
-              kleuren: {{ s.primary_color }} / {{ s.secondary_color }}
+
+            <!-- Header: logo + info -->
+            <div style="display:flex; gap:14px; align-items:center;">
+
+              {% if s.logo_path %}
+                <img src="{{ s.logo_path }}" alt="{{ s.name }} logo" class="school-logo">
+              {% else %}
+                <div class="school-logo placeholder">Logo</div>
+              {% endif %}
+
+              <div>
+                <div style="font-weight:900;">{{ s.name }}</div>
+                <div style="font-size:13px; color:var(--muted);">
+                  slug: {{ s.slug }}
+                </div>
+                <div style="font-size:13px; color:var(--muted);">
+                  kleuren: {{ s.primary_color }} / {{ s.secondary_color }}
+                </div>
+              </div>
+
             </div>
+
+            <!-- Logo upload -->
+            <form
+              method="post"
+              action="/admin/schools/{{ s.id }}/logo"
+              enctype="multipart/form-data"
+              style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px;"
+            >
+              <input
+                type="file"
+                name="logo"
+                accept=".png,.jpg,.jpeg,.webp"
+                required
+              >
+              <button type="submit">Upload logo</button>
+            </form>
+
           </div>
         {% endfor %}
+
       </div>
     {% else %}
-      <p style="color:var(--muted); margin:0;">Nog geen scholen.</p>
+      <p style="color:var(--muted); margin:0;">
+        Nog geen scholen toegevoegd.
+      </p>
     {% endif %}
   </div>
 
 </div>
 
 {% endblock %}
+
