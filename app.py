@@ -6,8 +6,7 @@ from datetime import datetime
 
 from flask import Flask, render_template, session
 
-
-# Blueprints (nieuwe structuur)
+# Blueprints
 from modules.core.auth import bp as auth_bp
 from modules.docent.routes import bp as docent_bp
 from modules.leerling.routes import bp as leerling_bp
@@ -54,7 +53,6 @@ def create_app() -> Flask:
         return None
 
     def _is_admin() -> bool:
-        # als jij later admin netjes opslaat: pas dit aan
         return bool(session.get("is_admin"))
 
     # ---- globals voor templates ----
@@ -62,11 +60,14 @@ def create_app() -> Flask:
     def inject_globals():
         email = _session_user_email()
         role = _session_role()
-    
-        school = session.get("school")
-        if not isinstance(school, dict):
-            school = None
-    
+
+        # school-branding alleen voor docent/leerling, niet voor admin
+        school = None
+        if role in ("docent", "leerling"):
+            s = session.get("school")
+            if isinstance(s, dict):
+                school = s
+
         return {
             "now_year": datetime.utcnow().year,
             "current_user": {
@@ -81,16 +82,12 @@ def create_app() -> Flask:
     # ---- Publieke landingspagina ----
     @app.get("/")
     def home():
-        # Hou dit bewust “simpel”: geen url_for hier,
-        # zodat home nooit crasht door endpoint-naam wijzigingen.
-        return render_template("public/home.html", page_title="Triade Tools")
+        return render_template("public/home.html", page_title="Mediawize")
 
     # ---- Register blueprints ----
-    # auth: /login /logout /signup
     app.register_blueprint(auth_bp)
 
-    # dashboards/toetsen
-    # (jouw routes laten zien: /docent/ en /leerling/)
+    # dashboards
     app.register_blueprint(docent_bp)
     app.register_blueprint(leerling_bp)
 
@@ -108,5 +105,4 @@ def create_app() -> Flask:
 app = create_app()
 
 if __name__ == "__main__":
-    # lokaal debuggen
     app.run(host="0.0.0.0", port=8501, debug=True)
