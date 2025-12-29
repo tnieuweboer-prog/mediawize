@@ -279,3 +279,18 @@ def admin_teachers_create():
     _save_teachers(teachers)
     flash("Docent toegevoegd.", "success")
     return redirect(url_for("admin.admin_teachers"))
+
+@admin_bp.post("/teachers/<teacher_id>/delete")
+@admin_required
+def admin_teachers_delete(teacher_id: str):
+    teachers = _load_teachers()
+    before = len(teachers)
+    teachers = [t for t in teachers if t.get("id") != teacher_id]
+
+    if len(teachers) == before:
+        flash("Docent niet gevonden.", "error")
+        return redirect(url_for("admin.admin_teachers"))
+
+    _save_teachers(teachers)
+    flash("Docent verwijderd.", "success")
+    return redirect(url_for("admin.admin_teachers"))
