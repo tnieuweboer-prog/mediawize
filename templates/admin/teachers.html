@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% set page_title = "Docenten" %}
+{% set active_tab = "admin" %}
+
+{% block content %}
+
+<h1>Docenten</h1>
+<p class="intro-text">
+  Voeg docenten toe en koppel elke docent aan één school.
+</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div style="margin:14px 0;">
+      {% for category, msg in messages %}
+        <div class="alert {{ category }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="row" style="align-items:flex-start;">
+
+  <!-- Docent toevoegen -->
+  <div class="card">
+    <h2 style="margin-top:0;">Docent toevoegen</h2>
+
+    <form method="post" action="/admin/teachers">
+      <label>Naam</label>
+      <input type="text" name="name" placeholder="Bijv. Tom Nieuweboer" required>
+
+      <label>E-mail</label>
+      <input type="email" name="email" placeholder="docent@school.nl" required>
+
+      <label>School</label>
+      <select name="school_id" required>
+        <option value="" selected disabled>Kies een school…</option>
+        {% for s in schools %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">Docent toevoegen</button>
+    </form>
+  </div>
+
+  <!-- Bestaande docenten -->
+  <div class="card">
+    <h2 style="margin-top:0;">Bestaande docenten</h2>
+
+    {% if teachers %}
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        {% for t in teachers %}
+          <div class="school-row" style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+            <div>
+              <div style="font-weight:900;">{{ t.name }}</div>
+              <div style="color:var(--muted); font-size:13px;">{{ t.email }}</div>
+              <div style="color:var(--muted); font-size:13px;">
+                school: {{ school_map.get(t.school_id, "Onbekend") }}
+              </div>
+            </div>
+            <div>
+              <span class="pill">{{ "Actief" if t.active else "Inactief" }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--muted); margin:0;">Nog geen docenten.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}
