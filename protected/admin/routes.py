@@ -198,3 +198,84 @@ def admin_school_logo_upload(school_id: str):
     flash("Logo geüpload.", "success")
     return redirect(url_for("admin.admin_schools"))
 
+# =================================================
+# TEACHERS – opslag helpers (JSON)
+# =================================================
+
+def _teachers_path() -> Path:
+    data_dir = os.environ.get("DATA_DIR", "/opt/mediawize/data")
+    return Path(data_dir) / "teachers.json"
+
+
+def _load_teachers() -> list[dict]:
+    p = _teachers_path()
+    if not p.exists():
+        return []
+    raw = p.read_text(encoding="utf-8").strip()
+    return json.loads(raw) if raw else []
+
+
+def _save_teachers(items: list[dict]) -> None:
+    p = _teachers_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+# =================================================
+# TEACHERS – routes
+# =================================================
+
+@admin_bp.get("/teachers")
+@admin_required
+def admin_teachers():
+    schools = _load_schools()
+    teachers = _load_teachers()
+
+    school_map = {s.get("id"): s.get("name") for s in schools}
+
+    teachers = sorted(teachers, key=lambda t: (t.get("name") or "").lower())
+    schools = sorted(schools, key=lambda s: (s.get("name") or "").lower())
+
+    return render_template(
+        "admin/teachers.html",
+        teachers=teachers,
+        schools=schools,
+        school_map=school_map
+    )
+
+
+@admin_bp.post("/teachers")
+@admin_required
+def admin_teachers_create():
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
+    school_id = (request.form.get("school_id") or "").strip()
+
+    if not name or not email or not school_id:
+        flash("Naam, e-mail en school zijn verplicht.", "error")
+        return redirect(url_for("admin.admin_teachers"))
+
+    schools = _load_schools()
+    if not any(s.get("id") == school_id for s in schools):
+        flash("Gekozen school bestaat niet.", "error")
+        return redirect(url_for("admin.admin_teachers"))
+
+    teachers = _load_teachers()
+
+    if any((t.get("email") or "").lower() == email for t in teachers):
+        flash("Deze e-mail bestaat al als docent.", "error")
+        return redirect(url_for("admin.admin_teachers"))
+
+    teachers.append({
+        "id": uuid.uuid4().hex,
+        "name": name,
+        "email": email,
+        "school_id": school_id,
+        "role": "docent",
+        "active": True,
+        "created_at": datetime.utcnow().isoformat() + "Z"
+    })
+
+    _save_teachers(teachers)
+    flash("Docent toegevoegd.", "success")
+    return redirect(url_for("admin.admin_teachers"))
