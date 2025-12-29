@@ -101,6 +101,15 @@ def _upsert_teacher(email: str, name: str, school_id: str) -> None:
 
     _save_list(_teachers_path(), teachers)
 
+def _find_teacher_by_email(email: str) -> dict | None:
+    teachers = _load_list(_teachers_path())
+    email_lc = _normalize_email(email)
+    return next((t for t in teachers if _normalize_email(t.get("email", "")) == email_lc), None)
+
+def _find_school_by_id(school_id: str) -> dict | None:
+    schools = _load_list(_schools_path())
+    return next((s for s in schools if s.get("id") == school_id), None)
+
 # ---------- routes ----------
 @bp.get("/login")
 def login():
@@ -129,6 +138,24 @@ def login_post():
     session["user"] = user["email"]
     session["role"] = user.get("role", "docent")
     session["is_admin"] = bool(user.get("is_admin", False))
+
+    # -----------------------------
+    # School branding in session
+    # -----------------------------
+    session.pop("school", None)
+
+    if session["role"] == "docent":
+        t = _find_teacher_by_email(email)
+        if t and t.get("school_id"):
+            s = _find_school_by_id(t["school_id"])
+            if s:
+                session["school"] = {
+                    "id": s.get("id"),
+                    "name": s.get("name"),
+                    "logo_path": s.get("logo_path") or "",
+                    "primary_color": s.get("primary_color") or "#22c55e",
+                    "secondary_color": s.get("secondary_color") or "#86efac",
+                }
 
     # doorsturen
     if session["role"] == "docent":
