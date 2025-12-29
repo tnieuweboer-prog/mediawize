@@ -7,11 +7,16 @@
 
   <link rel="stylesheet" href="/static/css/app.css">
 
-  {# School branding: zet accentkleuren dynamisch (fallback naar Mediawize) #}
+  {# Branding variabelen (school is dict of None) #}
+  {% set brand_logo = (school.get("logo_path") if school and school.get("logo_path") else "/static/assets/mediawize-logo.webp") %}
+  {% set brand_name = (school.get("name") if school and school.get("name") else "Mediawize") %}
+  {% set brand_primary = (school.get("primary_color") if school and school.get("primary_color") else "#22c55e") %}
+  {% set brand_secondary = (school.get("secondary_color") if school and school.get("secondary_color") else "#86efac") %}
+
   <style>
     :root{
-      --accent: {{ (school.primary_color if school and school.primary_color else "#22c55e") }};
-      --accent2: {{ (school.secondary_color if school and school.secondary_color else "#86efac") }};
+      --accent: {{ brand_primary }};
+      --accent2: {{ brand_secondary }};
     }
   </style>
 </head>
@@ -23,10 +28,6 @@
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
 
-    {# Logo: schoollogo als die er is, anders Mediawize #}
-    {% set brand_logo = (school.logo_path if school and school.logo_path else "/static/assets/mediawize-logo.webp") %}
-    {% set brand_name = (school.name if school and school.name else "Mediawize") %}
-
     <div class="logo">
       <div class="logo-badge">
         <img src="{{ brand_logo }}" alt="{{ brand_name }} logo">
@@ -35,7 +36,13 @@
       <div class="logo-text">
         <div class="logo-title">{{ brand_name }}</div>
         <div class="logo-sub">
-          {% if current_user.role == "docent" %}Docent{% elif current_user.role == "leerling" %}Leerling{% else %}Dashboard{% endif %}
+          {% if current_user.role == "docent" %}
+            Docent
+          {% elif current_user.role == "leerling" %}
+            Leerling
+          {% else %}
+            Dashboard
+          {% endif %}
         </div>
       </div>
     </div>
@@ -101,7 +108,6 @@
 
 </div>
 
-<!-- JS -->
 <script>
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("open");
@@ -110,3 +116,4 @@ function toggleSidebar() {
 
 </body>
 </html>
+
