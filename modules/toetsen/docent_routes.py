@@ -1,15 +1,14 @@
-# modules/toetsen/docent_routes.py
+# modules/docent/routes.py
 from __future__ import annotations
 
 from functools import wraps
-from flask import Blueprint, render_template, session, redirect, url_for, request
+from flask import Blueprint, render_template, session, redirect, url_for
 
 bp = Blueprint("docent", __name__, url_prefix="/docent")
 
 
 # ------------------------------------------------------------
-# Mini-guards (zodat dit bestand zelfstandig werkt)
-# Later kunnen we dit vervangen door modules/core/permissions.py
+# Mini-guards
 # ------------------------------------------------------------
 def login_required(fn):
     @wraps(fn)
@@ -34,17 +33,19 @@ def role_required(role: str):
 # ------------------------------------------------------------
 # Dashboard
 # Endpoint: docent.dashboard
-# Route: /docent
+# Route: /docent/
 # ------------------------------------------------------------
 @bp.get("/")
 @login_required
 @role_required("docent")
 def dashboard():
-    # active_tab gebruik je in base.html om menu-item actief te maken
+    school = session.get("school") if isinstance(session.get("school"), dict) else None
+    brand_name = (school.get("name") if school else None) or "Docent dashboard"
+
     return render_template(
         "docent/dashboard.html",
         active_tab="docent",
-        page_title="Docent dashboard",
+        page_title=brand_name,
     )
 
 
@@ -56,10 +57,8 @@ def dashboard():
 @login_required
 @role_required("docent")
 def toetsen_overzicht():
-    # Later vullen we dit met: lijst toetsen, nieuwe toets aanmaken, etc.
     return render_template(
         "toetsen/docent_overzicht.html",
         active_tab="toetsen",
         page_title="Toetsen",
     )
-
