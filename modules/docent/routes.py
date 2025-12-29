@@ -1,3 +1,4 @@
+# modules/docent/routes.py
 from __future__ import annotations
 
 from flask import Blueprint, render_template, session, redirect, url_for
@@ -19,5 +20,12 @@ def dashboard():
     if guard:
         return guard
 
-    # template: templates/docent/dashboard.html
-    return render_template("docent/dashboard.html", page_title="Docent dashboard")
+    # school info komt uit session["school"] (gezet bij login)
+    school = session.get("school") if isinstance(session.get("school"), dict) else None
+    brand_name = (school.get("name") if school else None) or "Docent dashboard"
+
+    return render_template(
+        "docent/dashboard.html",
+        page_title=brand_name,
+        active_tab="docent",
+    )
