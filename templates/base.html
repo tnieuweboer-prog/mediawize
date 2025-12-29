@@ -3,8 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ page_title or "Triade Tools" }}</title>
+  <title>{{ page_title or "Mediawize" }}</title>
+
   <link rel="stylesheet" href="/static/css/app.css">
+
+  {# School branding: zet accentkleuren dynamisch (fallback naar Mediawize) #}
+  <style>
+    :root{
+      --accent: {{ (school.primary_color if school and school.primary_color else "#22c55e") }};
+      --accent2: {{ (school.secondary_color if school and school.secondary_color else "#86efac") }};
+    }
+  </style>
 </head>
 
 <body>
@@ -13,8 +22,22 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
+
+    {# Logo: schoollogo als die er is, anders Mediawize #}
+    {% set brand_logo = (school.logo_path if school and school.logo_path else "/static/assets/mediawize-logo.webp") %}
+    {% set brand_name = (school.name if school and school.name else "Mediawize") %}
+
     <div class="logo">
-      <img src="/static/assets/mediawize-logo.webp" alt="Mediawize logo">
+      <div class="logo-badge">
+        <img src="{{ brand_logo }}" alt="{{ brand_name }} logo">
+      </div>
+
+      <div class="logo-text">
+        <div class="logo-title">{{ brand_name }}</div>
+        <div class="logo-sub">
+          {% if current_user.role == "docent" %}Docent{% elif current_user.role == "leerling" %}Leerling{% else %}Dashboard{% endif %}
+        </div>
+      </div>
     </div>
 
     <nav class="nav">
@@ -49,7 +72,7 @@
 
       {% if current_user.is_admin %}
         <hr>
-        <a href="/admin">
+        <a href="/admin" class="{{ 'active' if active_tab == 'admin' else '' }}">
           Beheer
         </a>
       {% endif %}
@@ -69,7 +92,7 @@
     <!-- TOPBAR (mobiel) -->
     <div class="topbar">
       <button class="hamburger" onclick="toggleSidebar()">☰</button>
-      <div class="topbar-title">{{ page_title or "Triade Tools" }}</div>
+      <div class="topbar-title">{{ page_title or brand_name }}</div>
     </div>
 
     {% block content %}{% endblock %}
@@ -87,4 +110,3 @@ function toggleSidebar() {
 
 </body>
 </html>
-
