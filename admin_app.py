@@ -37,7 +37,7 @@ def create_admin_app() -> Flask:
     @app.get("/")
     def root():
         # altijd naar admin dashboard
-        return redirect(url_for("admin.admin_dashboard"))
+        return redirect("/admin/login")
 
     # Alleen admin blueprint registreren
     app.register_blueprint(admin_bp, url_prefix="")  # jouw bp heeft al /admin prefix? Zo niet: zie note hieronder.
