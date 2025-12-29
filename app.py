@@ -10,7 +10,7 @@ from flask import Flask, render_template, session
 # Blueprints (nieuwe structuur)
 from modules.core.auth import bp as auth_bp
 from modules.docent.routes import bp as docent_bp
-from modules.leerling_routes import bp as leerling_bp
+from modules.leerling.routes import bp as leerling_bp
 from modules.html_tool.routes import bp as html_bp
 from modules.workbook.routes import bp as workbook_bp
 from protected.admin import admin_bp
