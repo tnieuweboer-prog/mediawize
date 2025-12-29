@@ -681,4 +681,7 @@ button{
   font-weight:900;
   color: var(--muted);
 }
+.btn-danger{
+  background:#ef4444;
+}
 
