@@ -1,1 +1,49 @@
+{% extends "base.html" %}
+
+{% set active_tab = "docent" %}
+{% set page_title = page_title or "Docent dashboard" %}
+
+{% block content %}
+
+<div class="card">
+  <div class="hero">
+    <h1>{{ school.get("name") if school else "Docent dashboard" }}</h1>
+    <p class="lead">
+      Je bent ingelogd als {{ current_user.email }}.
+      {% if school %}
+        Dit dashboard gebruikt het logo en de kleuren van jouw school.
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="tile-grid">
+
+    <a href="/html" class="tile">
+      <div class="tile-head">
+        <img src="/static/assets/icons/lightning.webp" alt="" class="tile-icon">
+        <h3 class="tile-title">DOCX → HTML</h3>
+      </div>
+      <p class="tile-desc">Zet Word-bestanden om naar Stermonitor-HTML in jouw schoolstijl.</p>
+    </a>
+
+    <a href="/workbook" class="tile">
+      <div class="tile-head">
+        <img src="/static/assets/icons/settings.webp" alt="" class="tile-icon">
+        <h3 class="tile-title">Werkboekjes</h3>
+      </div>
+      <p class="tile-desc">Maak werkboekjes vanuit stappenplannen en lesmateriaal.</p>
+    </a>
+
+    <a href="/docent/toetsen" class="tile">
+      <div class="tile-head">
+        <img src="/static/assets/icons/shield.webp" alt="" class="tile-icon">
+        <h3 class="tile-title">Toetsen</h3>
+      </div>
+      <p class="tile-desc">Beheer toetsen en deel ze met leerlingen.</p>
+    </a>
+
+  </div>
+</div>
+
+{% endblock %}
 
