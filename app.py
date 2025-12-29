@@ -62,6 +62,11 @@ def create_app() -> Flask:
     def inject_globals():
         email = _session_user_email()
         role = _session_role()
+    
+        school = session.get("school")
+        if not isinstance(school, dict):
+            school = None
+    
         return {
             "now_year": datetime.utcnow().year,
             "current_user": {
@@ -70,6 +75,7 @@ def create_app() -> Flask:
                 "is_authenticated": bool(email),
                 "is_admin": _is_admin(),
             },
+            "school": school,
         }
 
     # ---- Publieke landingspagina ----
