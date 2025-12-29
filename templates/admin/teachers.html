@@ -59,6 +59,11 @@
               <div style="color:var(--muted); font-size:13px;">
                 school: {{ school_map.get(t.school_id, "Onbekend") }}
               </div>
+              <form method="post" action="/admin/teachers/{{ t.id }}/delete"
+                    onsubmit="return confirm('Docent verwijderen?');"
+                    style="margin:0;">
+                <button type="submit" class="btn-danger">Verwijderen</button>
+              </form>
             </div>
             <div>
               <span class="pill">{{ "Actief" if t.active else "Inactief" }}</span>
