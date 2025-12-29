@@ -150,3 +150,51 @@ def admin_schools_create():
     flash("School toegevoegd.", "success")
     return redirect(url_for("admin.admin_schools"))
 
+from werkzeug.utils import secure_filename
+
+def _logos_dir() -> Path:
+    data_dir = os.environ.get("DATA_DIR", "/opt/mediawize/data")
+    return Path(data_dir) / "logos"
+
+def _allowed_logo(filename: str) -> bool:
+    ext = (filename.rsplit(".", 1)[-1] or "").lower()
+    return ext in {"png", "jpg", "jpeg", "webp"}
+
+
+@admin_bp.post("/schools/<school_id>/logo")
+@admin_required
+def admin_school_logo_upload(school_id: str):
+    file = request.files.get("logo")
+    if not file or not file.filename:
+        flash("Kies een bestand om te uploaden.", "error")
+        return redirect(url_for("admin.admin_schools"))
+
+    if not _allowed_logo(file.filename):
+        flash("Alleen PNG, JPG of WEBP toegestaan.", "error")
+        return redirect(url_for("admin.admin_schools"))
+
+    schools = _load_schools()
+    school = next((s for s in schools if s.get("id") == school_id), None)
+    if not school:
+        flash("School niet gevonden.", "error")
+        return redirect(url_for("admin.admin_schools"))
+
+    # veilige naam + vaste bestandsnaam per school
+    filename = secure_filename(file.filename)
+    ext = filename.rsplit(".", 1)[-1].lower()
+
+    logos_dir = _logos_dir()
+    logos_dir.mkdir(parents=True, exist_ok=True)
+
+    # bijv: <school_id>.png (altijd 1 logo per school)
+    saved_name = f"{school_id}.{ext}"
+    save_path = logos_dir / saved_name
+    file.save(str(save_path))
+
+    # we slaan een web-pad op dat je direct kunt gebruiken in <img src="">
+    school["logo_path"] = f"/data/logos/{saved_name}"
+    _save_schools(schools)
+
+    flash("Logo geüpload.", "success")
+    return redirect(url_for("admin.admin_schools"))
+
