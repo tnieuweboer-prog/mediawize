@@ -5,7 +5,9 @@ import os
 from datetime import datetime
 from flask import Flask, render_template, redirect, request, url_for, session, flash
 
-from protected.admin import admin_bp  # jouw bestaande admin blueprint
+from protected.admin import admin_bp
+app.register_blueprint(admin_bp)
+
 
 def create_admin_app() -> Flask:
     app = Flask(__name__, static_folder="static", template_folder="templates")
