@@ -1,52 +1,23 @@
-{% extends "base.html" %}
-
+{% extends "admin/base_admin.html" %}
 {% set page_title = "Admin login" %}
 
 {% block content %}
+<div class="card" style="max-width:520px;">
+  <h1>Admin login</h1>
+  <p class="intro-text">Log in om scholen en docenten te beheren.</p>
 
-<div style="max-width:420px;margin:0 auto;">
-
-  <h1>Beheer login</h1>
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div style="margin:12px 0;">
-        {% for category, msg in messages %}
-          <div class="alert">
-            {{ msg }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
-  <form method="post" action="{{ url_for('admin.admin_login_post') }}" class="card">
-
+  <form method="post" action="/admin/login">
     <input type="hidden" name="next_url" value="{{ next_url }}">
 
     <label>E-mail</label>
-    <input
-      type="email"
-      name="email"
-      required
-      autocomplete="username"
-    >
+    <input type="text" name="email" required>
 
     <label>Wachtwoord</label>
-    <input
-      type="password"
-      name="password"
-      required
-      autocomplete="current-password"
-    >
+    <input type="password" name="password" required>
 
-    <button type="submit" class="btn primary" style="margin-top:16px;">
-      Inloggen
-    </button>
-
+    <button type="submit">Inloggen</button>
   </form>
-
 </div>
-
 {% endblock %}
+
 
