@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page_title or "Mediawize Admin" }}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+  <div class="pub-header">
+    <div class="pub-header-inner">
+      <div class="pub-brand">
+        <img class="pub-logo" src="/static/assets/mediawize-logo.webp" alt="Mediawize">
+        <div>
+          <div class="pub-title">Mediawize</div>
+          <div class="pub-subtitle">Admin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="pub-main">
+    <div class="pub-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="card" style="margin-bottom:12px;">
+            {% for category, msg in messages %}
+              <p class="intro-text" style="margin:0;">{{ msg }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+</body>
+</html>
