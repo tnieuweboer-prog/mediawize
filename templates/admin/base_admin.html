@@ -2,48 +2,42 @@
 <html lang="nl">
 <head>
   <meta charset="utf-8">
-  <title>{{ page_title or "Mediawize Beheer" }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
- <link rel="stylesheet" href="{{ url_for('admin.static', filename='admin.css') }}">
+  <title>{{ page_title or "Mediawize Admin" }}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
 </head>
 
-<body class="admin-layout">
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="logo">
+        <div class="logo-badge">
+          <img src="/static/assets/mediawize-logo.webp" alt="Mediawize">
+        </div>
+        <div class="logo-text">
+          <div class="logo-title">Mediawize</div>
+          <div class="logo-sub">Beheer</div>
+        </div>
+      </div>
 
-  <!-- Sidebar -->
-  <aside class="admin-sidebar">
-    <div class="admin-logo">
-      <strong>Mediawize</strong>
-      <span>Beheer</span>
-    </div>
+      <nav class="nav">
+        <a href="/admin/" class="{{ 'active' if active_tab == 'admin_home' else '' }}">Dashboard</a>
+        <a href="/admin/schools" class="{{ 'active' if active_tab == 'schools' else '' }}">Scholen</a>
+        <a href="/admin/teachers" class="{{ 'active' if active_tab == 'teachers' else '' }}">Docenten</a>
+        <a href="/admin/tools" class="{{ 'active' if active_tab == 'tools' else '' }}">Tools</a>
 
-    <nav class="admin-nav">
-      <a href="/admin/" class="{% if active_tab == 'admin_home' %}active{% endif %}">
-        Dashboard
-      </a>
-      <a href="/admin/schools" class="{% if active_tab == 'schools' %}active{% endif %}">
-        Scholen
-      </a>
-      <a href="/admin/teachers" class="{% if active_tab == 'teachers' %}active{% endif %}">
-        Docenten
-      </a>
-      <a href="/admin/tools" class="{% if active_tab == 'tools' %}active{% endif %}">
-        Tools
-      </a>
-    </nav>
+        <hr>
+        <a href="/admin/logout">Uitloggen</a>
+      </nav>
+    </aside>
 
-    <div class="admin-footer">
-      <a href="/admin/logout" class="logout">
-        Uitloggen
-      </a>
-    </div>
-  </aside>
-
-  <!-- Content -->
-  <main class="admin-content">
-    {% block content %}{% endblock %}
-  </main>
-
+    <main class="content">
+      <div class="card">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
 </body>
 </html>
+
 
