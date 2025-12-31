@@ -1,39 +1,32 @@
 {% extends "admin/base_admin.html" %}
-
-{% set page_title = "Beheer dashboard" %}
+{% set page_title = "Beheer" %}
 {% set active_tab = "admin_home" %}
 
 {% block content %}
-
-<h1>Dashboard</h1>
-
-<p class="intro">
-  Welkom in het Mediawize beheer dashboard.
+<h1>Beheer</h1>
+<p class="intro-text">
+  Welkom in het Mediawize beheer dashboard. Vanuit hier richt je scholen in,
+  beheer je docenten en bepaal je welke tools beschikbaar zijn.
 </p>
 
 <div class="tile-grid">
-
   <a href="/admin/schools" class="tile">
-    <h3>Scholen</h3>
-    <p>Beheer scholen en branding</p>
+    <img src="/static/assets/icons/settings.webp" alt="" class="tile-icon">
+    <h3 class="tile-title">Scholen</h3>
+    <p class="tile-desc">Voeg scholen toe en stel branding in zoals logo en kleuren.</p>
   </a>
 
   <a href="/admin/teachers" class="tile">
-    <h3>Docenten</h3>
-    <p>Beheer docentaccounts</p>
+    <img src="/static/assets/icons/shield.webp" alt="" class="tile-icon">
+    <h3 class="tile-title">Docenten</h3>
+    <p class="tile-desc">Beheer docentaccounts, rollen en rechten per tool.</p>
   </a>
 
   <a href="/admin/tools" class="tile">
-    <h3>Tools</h3>
-    <p>Activeer en beheer modules</p>
+    <img src="/static/assets/icons/lightning.webp" alt="" class="tile-icon">
+    <h3 class="tile-title">Tools</h3>
+    <p class="tile-desc">Beheer modules zoals DOCX → HTML, werkboeken en toetsen.</p>
   </a>
-
 </div>
-
 {% endblock %}
-
-</div>
-
-{% endblock %}
-
 
