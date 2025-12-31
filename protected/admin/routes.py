@@ -39,9 +39,8 @@ def admin_login():
 
 @admin_bp.post("/login")
 def admin_login_post():
-    email = (request.form.get("email") or "").strip().lower()
-    password = request.form.get("password") or ""
-    next_url = request.form.get("next_url") or url_for("admin.admin_dashboard")
+    ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 
     if not ADMIN_EMAIL or not ADMIN_PASSWORD:
         flash("Admin login is nog niet geconfigureerd op de server.", "error")
