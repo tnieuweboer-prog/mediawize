@@ -94,9 +94,6 @@ def create_app() -> Flask:
     app.register_blueprint(html_bp)
     app.register_blueprint(workbook_bp)
 
-    # admin
-    app.register_blueprint(admin_bp)
-
     return app
 
 
