@@ -1,1 +1,81 @@
+body.admin-layout {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f1f5f9;
+  display: flex;
+}
+
+/* Sidebar */
+.admin-sidebar {
+  width: 240px;
+  background: #0f172a;
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.admin-logo {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.admin-logo span {
+  display: block;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.admin-nav a {
+  display: block;
+  padding: 10px 12px;
+  color: #cbd5f5;
+  text-decoration: none;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.admin-nav a.active,
+.admin-nav a:hover {
+  background: #1e293b;
+  color: white;
+}
+
+.admin-footer {
+  margin-top: auto;
+}
+
+.admin-footer .logout {
+  display: block;
+  padding: 10px 12px;
+  color: #fca5a5;
+  text-decoration: none;
+}
+
+/* Content */
+.admin-content {
+  flex: 1;
+  padding: 32px;
+}
+
+/* Tiles */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.tile {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.tile:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
 
