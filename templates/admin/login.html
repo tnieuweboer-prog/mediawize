@@ -1,23 +1,21 @@
 {% extends "admin/base_admin.html" %}
 {% set page_title = "Admin login" %}
+{% set active_tab = "" %}
 
 {% block content %}
-<div class="card" style="max-width:520px;">
-  <h1>Admin login</h1>
-  <p class="intro-text">Log in om scholen en docenten te beheren.</p>
+<h1>Admin login</h1>
 
-  <form method="post" action="/admin/login">
-    <input type="hidden" name="next_url" value="{{ next_url }}">
+<form method="post" action="/admin/login">
+  <input type="hidden" name="next_url" value="{{ next_url or '/admin/' }}">
 
-    <label>E-mail</label>
-    <input type="text" name="email" required>
+  <label>E-mail</label>
+  <input type="text" name="email" autocomplete="username" required>
 
-    <label>Wachtwoord</label>
-    <input type="password" name="password" required>
+  <label>Wachtwoord</label>
+  <input type="password" name="password" autocomplete="current-password" required>
 
-    <button type="submit">Inloggen</button>
-  </form>
-</div>
+  <button type="submit">Inloggen</button>
+</form>
 {% endblock %}
 
 
