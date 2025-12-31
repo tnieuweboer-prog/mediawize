@@ -7,6 +7,7 @@ from datetime import datetime
 
 from flask import render_template, request, redirect, url_for, session, flash
 
+
 from . import admin_bp
 from .decorators import admin_required
 
@@ -30,7 +31,7 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 def admin_login():
     # Al ingelogd? → direct naar dashboard
     if session.get("is_admin") is True:
-        return redirect(url_for("admin.admin_dashboard"))
+        return render_template("admin/dashboard.html", active_tab="admin_home")
 
     next_url = request.args.get("next") or url_for("admin.admin_dashboard")
     return render_template("login.html", next_url=next_url)
