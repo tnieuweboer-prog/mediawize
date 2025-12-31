@@ -1,42 +1,49 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="utf-8">
+  <title>{{ page_title or "Mediawize Beheer" }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ page_title or "Mediawize Admin" }}</title>
-  <link rel="stylesheet" href="/static/css/app.css">
+
+  <link rel="stylesheet" href="/static/admin/admin.css">
 </head>
-<body>
 
-  <div class="pub-header">
-    <div class="pub-header-inner">
-      <div class="pub-brand">
-        <img class="pub-logo" src="/static/assets/mediawize-logo.webp" alt="Mediawize">
-        <div>
-          <div class="pub-title">Mediawize</div>
-          <div class="pub-subtitle">Admin</div>
-        </div>
-      </div>
+<body class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-logo">
+      <strong>Mediawize</strong>
+      <span>Beheer</span>
     </div>
-  </div>
 
-  <main class="pub-main">
-    <div class="pub-container">
+    <nav class="admin-nav">
+      <a href="/admin/" class="{% if active_tab == 'admin_home' %}active{% endif %}">
+        Dashboard
+      </a>
+      <a href="/admin/schools" class="{% if active_tab == 'schools' %}active{% endif %}">
+        Scholen
+      </a>
+      <a href="/admin/teachers" class="{% if active_tab == 'teachers' %}active{% endif %}">
+        Docenten
+      </a>
+      <a href="/admin/tools" class="{% if active_tab == 'tools' %}active{% endif %}">
+        Tools
+      </a>
+    </nav>
 
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="card" style="margin-bottom:12px;">
-            {% for category, msg in messages %}
-              <p class="intro-text" style="margin:0;">{{ msg }}</p>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
-
-      {% block content %}{% endblock %}
-
+    <div class="admin-footer">
+      <a href="/admin/logout" class="logout">
+        Uitloggen
+      </a>
     </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="admin-content">
+    {% block content %}{% endblock %}
   </main>
 
 </body>
 </html>
+
