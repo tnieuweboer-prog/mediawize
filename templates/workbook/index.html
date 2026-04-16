@@ -1,86 +1,121 @@
-{# templates/workbook/index.html #}
+{# templates/workbook/index.html (UPDATED) #}
 {% extends "base.html" %}
 {% block content %}
 
 <div class="card">
   <h1>Werkboekjes-generator</h1>
-  <p class="lead">Templates blijven leidend (BWI/PIE/MVI). We vullen nu cover, materiaalstaat en stappen.</p>
+  <p class="lead">Maak interactieve werkboekjes met stappen, afbeeldingen en materiaalstaten. Kies om online te publiceren of als DOCX te downloaden.</p>
 
   {% if error %}
-    <p style="color:red;font-weight:700">{{ error }}</p>
+    <p style="color:#d32f2f;font-weight:700;padding:12px;background:#ffebee;border-radius:8px;">{{ error }}</p>
   {% endif %}
 
   <form id="wbForm" method="POST" enctype="multipart/form-data">
     <input type="hidden" id="stepCount" name="stepCount" value="{{ step_count }}">
+    <input type="hidden" id="action" name="action" value="download">
 
+    <!-- Vak Selection -->
     <label>Vak (template)</label>
     <select name="vak" required>
       {% set vak = values.get("vak", "BWI") %}
-      <option value="BWI" {{ "selected" if vak=="BWI" else "" }}>BWI</option>
-      <option value="PIE" {{ "selected" if vak=="PIE" else "" }}>PIE</option>
-      <option value="MVI" {{ "selected" if vak=="MVI" else "" }}>MVI</option>
+      <option value="BWI" {{ "selected" if vak=="BWI" else "" }}>BWI - Basis Werktuigkunde</option>
+      <option value="PIE" {{ "selected" if vak=="PIE" else "" }}>PIE - Productie & Innovatie</option>
+      <option value="MVI" {{ "selected" if vak=="MVI" else "" }}>MVI - Media & Visuele Informatica</option>
     </select>
 
+    <!-- Basic Info -->
     <div class="row">
       <div>
-        <label>Opdracht titel</label>
-        <input type="text" name="titel" required value="{{ values.get('titel','') }}">
+        <label>Opdracht titel *</label>
+        <input type="text" name="titel" required value="{{ values.get('titel','') }}" placeholder="bijv. Bluetooth Speaker bouwen">
       </div>
       <div>
         <label>Profieldeel (optioneel)</label>
-        <input type="text" name="profieldeel" value="{{ values.get('profieldeel','') }}">
+        <input type="text" name="profieldeel" value="{{ values.get('profieldeel','') }}" placeholder="bijv. Elektronica">
       </div>
     </div>
 
     <div class="row">
       <div>
         <label>Docent</label>
-        <input type="text" name="docent" value="{{ values.get('docent','') }}">
+        <input type="text" name="docent" value="{{ values.get('docent','') }}" placeholder="Naam docent">
       </div>
       <div>
         <label>Duur</label>
-        <input type="text" name="duur" value="{{ values.get('duur','10 x 45 minuten') }}">
+        <input type="text" name="duur" value="{{ values.get('duur','10 x 45 minuten') }}" placeholder="bijv. 10 x 45 minuten">
       </div>
     </div>
 
+    <!-- Cover Section -->
     <div class="section">
-      <h3>Omslag</h3>
+      <h3>📸 Omslag</h3>
       <label>Cover-afbeelding (optioneel)</label>
       <input type="file" name="cover" accept=".png,.jpg,.jpeg">
+      <p class="lead" style="margin-top:8px;">Max 10MB. PNG, JPG of JPEG.</p>
     </div>
 
+    <!-- Materials Section -->
     <div class="section">
-      <h3>Materiaalstaat</h3>
+      <h3>📋 Materiaalstaat</h3>
       <label>
         <input type="checkbox" name="include_materiaalstaat" {{ "checked" if values.get("include_materiaalstaat") else "" }}>
         Materiaalstaat toevoegen
       </label>
 
-      <label>Aantal regels (bijv. 5)</label>
-      <input type="text" name="mat_rows" value="{{ values.get('mat_rows','3') }}">
-      <p class="lead" style="margin-top:8px;">(Later maken we echte velden per regel; nu is dit een snelle basis.)</p>
+      <label style="margin-top:12px;">Aantal regels</label>
+      <input type="text" name="mat_rows" value="{{ values.get('mat_rows','3') }}" placeholder="bijv. 5">
+      <p class="lead" style="margin-top:8px;">Aantal materialen in de statenlijst.</p>
     </div>
 
+    <!-- Steps -->
     {% for i in range(step_count) %}
       <div class="section">
-        <h3>Stap {{ i+1 }}</h3>
+        <h3>📝 Stap {{ i+1 }}</h3>
+        
         <label>Titel</label>
-        <input type="text" name="step_title_{{ i }}" value="{{ values.get('step_title_' ~ i, '') }}">
+        <input type="text" name="step_title_{{ i }}" value="{{ values.get('step_title_' ~ i, '') }}" placeholder="bijv. Bekijk de onderdelen">
 
-        <label>Tekst</label>
-        <textarea name="step_text_{{ i }}" rows="4">{{ values.get('step_text_' ~ i, '') }}</textarea>
+        <label>Beschrijving</label>
+        <textarea name="step_text_{{ i }}" rows="4" placeholder="Geef duidelijke instructies...">{{ values.get('step_text_' ~ i, '') }}</textarea>
 
         <label>Afbeelding (optioneel)</label>
         <input type="file" name="step_img_{{ i }}" accept=".png,.jpg,.jpeg">
       </div>
     {% endfor %}
 
+    <!-- Action Buttons -->
     <div class="section">
-      <button type="button" class="btn-copy" onclick="addStep()">➕ Nieuwe stap toevoegen</button>
-      <button type="submit">📘 Werkboekje genereren</button>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn-copy" onclick="addStep()">➕ Nieuwe stap toevoegen</button>
+        <button type="button" class="btn-secondary" onclick="setActionAndSubmit('save_online')">🌐 Online publiceren</button>
+        <button type="submit" onclick="setActionAndSubmit('download')">📥 Als DOCX downloaden</button>
+      </div>
     </div>
   </form>
 </div>
 
-{% endblock %}
+<script>
+function addStep() {
+  const stepCount = parseInt(document.getElementById('stepCount').value);
+  document.getElementById('stepCount').value = stepCount + 1;
+  document.getElementById('wbForm').submit();
+}
 
+function setActionAndSubmit(action) {
+  document.getElementById('action').value = action;
+  document.getElementById('wbForm').submit();
+}
+</script>
+
+<style>
+.btn-secondary {
+  background: #1e293b;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #0f172a;
+}
+</style>
+
+{% endblock %}

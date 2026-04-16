@@ -1,0 +1,11 @@
+{# templates/workbook/error.html #}
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>Fout</h1>
+  <p class="lead">Er is een fout opgetreden. Probeer later opnieuw.</p>
+  <a href="{{ url_for('workbook.workbook_get') }}" class="btn">Terug</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+{# templates/workbook/not_found.html #}
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h1>Werkboekje niet gevonden</h1>
+  <p class="lead">Het werkboekje dat je zoekt bestaat niet of is verwijderd.</p>
+  <a href="{{ url_for('workbook.workbook_get') }}" class="btn">Terug naar werkboekjes</a>
+</div>
+
+{% endblock %}
